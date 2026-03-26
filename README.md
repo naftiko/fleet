@@ -8,4 +8,5 @@ Backstage integrated template via Docker : Allows teams to create new projects, 
 Templates are defined in YAML and can trigger GitHub actions like creating a repo, pushing boilerplate code, or registering the new component in the catalog automatically.
 This is Naftiko's custom Backstage template.
  
-### More coming soon...
+### [VS Code extension](./vscode-usage.md)
+A Naftiko VS Code extension to help you editing Naftiko files.
