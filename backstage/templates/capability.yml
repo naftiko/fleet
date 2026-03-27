@@ -1,0 +1,120 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: naftiko-capability-template
+  title: Naftiko Capability
+  description: >
+    Create a new capability component by choosing an adapter from
+    Empty, MCP, REST, or Agent Skills. The corresponding configuration file
+    is then customized and pushed to GitHub.
+  tags:
+    - naftiko
+    - capability
+spec:
+  owner: user:guest
+  type: service
+
+  # ──────────────────────────────────────────────────
+  # Parameters entered by the user in the wizard
+  # ──────────────────────────────────────────────────
+  parameters:
+    - title: Capability Information
+      required:
+        - name
+        - empty
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Name of your capability
+          ui:autofocus: true
+          pattern: '^[a-zA-Z0-9_-]+$'
+          minLength: 2
+          maxLength: 64
+
+        empty:
+          title: Empty
+          description: Tick to create an empty capability configuration skeleton
+          type: boolean
+          default: false
+          ui:widget: checkbox
+
+      dependencies:
+        empty:
+          oneOf:
+            - properties:
+                empty:
+                  enum: [true]
+            - properties:
+                empty:
+                  enum: [false]
+                adapters:
+                  title: Adapters
+                  type: array
+                  description: Select one or more adapters
+                  minItems: 1
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum:
+                      - MCP
+                      - REST
+                      - Agent Skills
+                  ui:widget: checkboxes
+              required:
+                - adapters
+
+    - title: GitHub repository configuration
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Target GitHub Repository
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+
+  # ──────────────────────────────────────────────────
+  # Execution steps of scaffolder
+  # ──────────────────────────────────────────────────
+  steps:
+    - id: fetch-skeleton
+      name: Fetch skeleton capability files
+      action: fetch:template
+      input:
+        url: ./skeletons/capabilities
+        values:
+          name: ${{ parameters.name }}
+          empty: ${{ parameters.empty }}
+          adapters: ${{ parameters.adapters if parameters.adapters else [] }}
+          repoOwner: ${{ (parameters.repoUrl | parseRepoUrl).owner }}
+          repoName: ${{ (parameters.repoUrl | parseRepoUrl).repo }}
+
+    - id: publish-github
+      name: Publish on GitHub
+      action: publish:github
+      input:
+        description: Capability ${{ parameters.name }} (${{ parameters.adapters | join(', ') }}) created via Backstage
+        repoUrl: ${{ parameters.repoUrl }}
+        defaultBranch: main
+      
+    - id: register-catalog
+      name: Register in Backstage catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish-github'].output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  # ──────────────────────────────────────────────────
+  # Result displayed to the user after creation
+  # ──────────────────────────────────────────────────
+  output:
+    links:
+      - title: View repository on GitHub
+        url: ${{ steps['publish-github'].output.remoteUrl }}
+      - title: Open a Pull Request
+        url: ${{ steps['publish-github'].output.repoContentsUrl }}
+      - title: View the capability component in the catalog
+        url: ${{ steps['register-catalog'].output.entityRef }}

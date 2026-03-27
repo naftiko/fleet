@@ -1,0 +1,25 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  description: Composant ${{ values.name }} créé via Backstage
+  tags:
+    - naftiko
+    - capability
+    {% if not values.empty %}
+      {% for adapter in values.adapters %}
+    - ${{ adapter | lower }}
+      {% endfor %}
+    {% endif %}
+  links:
+    - url: https://github.com/${{ values.repoOwner }}/${{ values.repoName }}
+      title: Voir les fichiers du dépôt
+      icon: github
+  annotations:
+    backstage.io/source-location: url:https://github.com/${{ values.repoOwner }}/${{ values.repoName }}/blob/main/
+    github.com/project-slug: ${{ values.repoOwner }}/${{ values.repoName }}
+spec:
+  type: service
+  lifecycle: experimental
+  owner: user:guest
+  
