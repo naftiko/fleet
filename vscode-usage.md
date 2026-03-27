@@ -41,7 +41,7 @@ No specific settings needed.
 
 ## Release Notes
 
-Naftiko VS Code extension versions are aligned with the Naftiko framework versions.
+Naftiko VS Code extension versions are aligned with those of Naftiko Framework.
 
 ### 1.0.0-alpha1
 
