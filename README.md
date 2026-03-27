@@ -8,12 +8,12 @@ The Community Edition is provided as freeware, with upcoming Standard and Enterp
 
 ## Features
  
-### [Naftiko Templates for Backstage](./backstage-usage.md)
+### [Naftiko Templates for Backstage](https://github.com/naftiko/fleet/wiki/Backstage-usage)
 Backstage integrated template via Docker : Allows teams to create new projects, services or resources from pre-defined templates — with one click. 
 Templates are defined in YAML and can trigger GitHub Actions like creating a repo, pushing boilerplate code, or registering the new component in the catalog automatically.
  
-### [Naftiko Extension for VS Code](./vscode-usage.md)
+### [Naftiko Extension for VS Code](https://github.com/naftiko/fleet/wiki/VS-Code-usage)
 A Naftiko VS Code extension to help you editing Naftiko files.
 
-### [Naftiko Framework](https://github.com/naftiko/framework)
+### [Naftiko Framework](https://github.com/naftiko/framework/wiki)
 The core Open Source technology to create and run capabilities.
