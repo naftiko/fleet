@@ -4,7 +4,7 @@ Welcome to Naftiko Fleet, the leading product for [Spec-Driven Integration](http
 
 <img src="https://naftiko.github.io/docs/images/technology/fleet-overview.png" width="600">
 
-The Community Edition is provided as freeware, with upcoming Standard and Enterprise editions that will add premium features suitable for advanced projects and organizations.
+The Community Edition is provided as freeware, with upcoming Standard and Enterprise editions that will add premium features suitable for advanced projects and larger organizations.
 
 ## Features
 
