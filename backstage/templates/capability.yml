@@ -117,4 +117,5 @@ spec:
       - title: Open a Pull Request
         url: ${{ steps['publish-github'].output.repoContentsUrl }}
       - title: View the capability component in the catalog
-        url: ${{ steps['register-catalog'].output.entityRef }}
+        icon: catalog
+        entityRef: ${{ steps['register-catalog'].output.entityRef }}
