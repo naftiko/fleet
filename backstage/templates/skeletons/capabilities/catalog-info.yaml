@@ -6,11 +6,11 @@ metadata:
   tags:
     - naftiko
     - capability
-    {% if not values.empty %}
-      {% for adapter in values.adapters %}
-    - ${{ adapter | lower }}
-      {% endfor %}
-    {% endif %}
+    {%- if not values.empty %}
+    {%- for adapter in values.adapters %}
+    - ${{ adapter | lower | replace(" ", "-") }}
+    {%- endfor %}
+    {%- endif %}
   links:
     - url: https://github.com/${{ values.repoOwner }}/${{ values.repoName }}
       title: Voir les fichiers du dépôt
