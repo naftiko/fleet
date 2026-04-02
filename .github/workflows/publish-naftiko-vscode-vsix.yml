@@ -41,7 +41,7 @@ jobs:
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v5
         with:
-          name: vscode-naftiko-vsix
+          name: naftiko-vscode-vsix
           path: frontend/vscode-naftiko/*.vsix
 
       - name: Publish to GitHub Releases (fleet)
