@@ -50,8 +50,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VSIX=$(ls frontend/vscode-naftiko/*.vsix | head -1)
-          gh release create "${{ github.ref_name }}" \
-            --repo ${{ github.repository }} \
-            --title "Release ${{ github.ref_name }}" \
-            --generate-notes \
-            "$VSIX"
+          gh release upload "${{ github.ref_name }}" "$VSIX" --clobber --repo ${{ github.repository }}
