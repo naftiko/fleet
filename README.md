@@ -8,7 +8,7 @@ The Community Edition is provided as freeware, with upcoming Standard and Enterp
 
 ## Features
 
-### [Naftiko Framework](https://github.com/naftiko/framework/wiki)
+### [Naftiko Framework](https://github.com/naftiko/framework/)
 The core Open Source technology to create and run capabilities.
  
 ### [Naftiko Extension for VS Code](https://github.com/naftiko/fleet/wiki/VS-Code-usage)
