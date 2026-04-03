@@ -45,8 +45,9 @@ jobs:
           path: frontend/vscode-naftiko/*.vsix
 
       - name: Publish to GitHub Releases (fleet)
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VSIX=$(ls frontend/vscode-naftiko/*.vsix | head -1)
-          gh release upload "v1.0.0-alpha1" "$VSIX" --clobber --repo ${{ github.repository }}
+          gh release upload "${{ github.ref_name }}" "$VSIX" --clobber --repo ${{ github.repository }}
