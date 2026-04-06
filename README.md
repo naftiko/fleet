@@ -13,6 +13,9 @@ Open Source project (Apache 2.0) to create and run Naftiko capabilities using sp
  
 ### [Naftiko Extension for VS Code](https://github.com/naftiko/fleet/wiki/Naftiko-Extension-for-VS-Code)
 Free Naftiko extension for Visual Studio Code to help with the editing and linting of Naftiko capabilities.
- 
+
 ### [Naftiko Templates for Backstage](https://github.com/naftiko/fleet/wiki/Naftiko-Templates-for-Backstage)
 Free Naftiko templates for CNCF's Backstage to help with the scaffolding and cataloguing of Naftiko capabilities.
+
+### Naftiko Operator for Kubernetes [coming soon]
+Free Naftiko operator for CNCF's Kubernetes to help with the operations of Naftiko capabilities.
