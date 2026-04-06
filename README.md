@@ -4,9 +4,7 @@ Welcome to Naftiko Fleet, the leading product for [Spec-Driven Integration](http
 
 <img src="https://naftiko.github.io/docs/images/technology/fleet-overview.png" width="600">
 
-The Community Edition is provided as freeware, with upcoming Standard and Enterprise editions that will add premium features suitable for advanced projects and larger organizations.
-
-## Includes
+The Community Edition is provided as freeware, with upcoming Standard and Enterprise editions that will add premium features suitable for advanced projects and larger organizations. It includes the following components:
 
 ### [Naftiko Framework](https://github.com/naftiko/framework/)
 Open Source project (Apache 2.0) to create and run Naftiko capabilities using spec-driven integration.
@@ -19,3 +17,14 @@ Free Naftiko templates for CNCF's Backstage to help with the scaffolding and cat
 
 ### Naftiko Operator for Kubernetes [coming soon]
 Free Naftiko operator for CNCF's Kubernetes to help with the operations of Naftiko capabilities.
+
+***
+
+Here are additional documents to learn more:
+
+- :mega: [Releases](https://github.com/naftiko/fleet/releases)
+- :telescope: [Roadmap](https://github.com/naftiko/fleet/wiki/Roadmap)
+
+Please join the community of users and contributors in [this GitHub Discussion forum!](https://github.com/orgs/naftiko/discussions).
+
+<img src="https://naftiko.github.io/docs/images/navi/navi_hello.svg" width="50">
