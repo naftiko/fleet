@@ -9,10 +9,11 @@ The Community Edition is provided as freeware, with upcoming Standard and Enterp
 ## Features
 
 ### [Naftiko Framework](https://github.com/naftiko/framework/)
-The core Open Source technology to create and run capabilities.
+Open Source technology to create and run Naftiko capabilities.
+
  
 ### [Naftiko Extension for VS Code](https://github.com/naftiko/fleet/wiki/Naftiko-Extension-for-VS-Code)
-The free Naftiko extension for Visual Studio Code to help with the editing and linting of Naftiko capabilities.
+Free Naftiko extension for Visual Studio Code to help with the editing and linting of Naftiko capabilities.
  
 ### [Naftiko Templates for Backstage](https://github.com/naftiko/fleet/wiki/Naftiko-Templates-for-Backstage)
-The free Naftiko templates for CNCF's Backstage to help with the scaffolding and cataloguing of Naftiko capabilities.
+Free Naftiko templates for CNCF's Backstage to help with the scaffolding and cataloguing of Naftiko capabilities.
