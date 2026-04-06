@@ -14,6 +14,6 @@ The core Open Source technology to create and run capabilities.
 ### [Naftiko Extension for VS Code](https://github.com/naftiko/fleet/wiki/Naftiko-Extension-for-VS-Code)
 A Naftiko VS Code extension to help you editing Naftiko files.
  
-### [Naftiko Templates for Backstage](https://github.com/naftiko/fleet/wiki/Backstage-usage)
+### [Naftiko Templates for Backstage](https://github.com/naftiko/fleet/wiki/Naftiko-Templates-for-Backstage)
 Backstage integrated template via Docker : Allows teams to create new projects, services or resources from pre-defined templates — with one click. 
 Templates are defined in YAML and can trigger GitHub Actions like creating a repo, pushing boilerplate code, or registering the new component in the catalog automatically.
