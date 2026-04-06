@@ -6,7 +6,7 @@ Welcome to Naftiko Fleet, the leading product for [Spec-Driven Integration](http
 
 The Community Edition is provided as freeware, with upcoming Standard and Enterprise editions that will add premium features suitable for advanced projects and larger organizations.
 
-## Features
+## Includes
 
 ### [Naftiko Framework](https://github.com/naftiko/framework/)
 Open Source project (Apache 2.0) to create and run Naftiko capabilities using spec-driven integration.
