@@ -9,7 +9,7 @@ The Community Edition is provided as freeware, with upcoming Standard and Enterp
 ## Features
 
 ### [Naftiko Framework](https://github.com/naftiko/framework/)
-Open Source project to create and run Naftiko capabilities using spec-driven integration.
+Open Source project (Apache 2.0) to create and run Naftiko capabilities using spec-driven integration.
  
 ### [Naftiko Extension for VS Code](https://github.com/naftiko/fleet/wiki/Naftiko-Extension-for-VS-Code)
 Free Naftiko extension for Visual Studio Code to help with the editing and linting of Naftiko capabilities.
