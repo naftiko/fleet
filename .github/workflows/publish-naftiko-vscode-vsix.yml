@@ -18,7 +18,7 @@ jobs:
         with:
           repository: naftiko/fabric
           # naftiko/fabric is private, use a secret PAT with repo access to naftiko/fabric
-          token: ${{ secrets.FABRIC_PAT }}
+          token: ${{ secrets.FABRIC_CONTENTS_READ }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
