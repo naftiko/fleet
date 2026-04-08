@@ -4,8 +4,8 @@ metadata:
   name: naftiko-capability-template
   title: Naftiko Capability
   description: >
-    Create a new capability component by choosing an adapter from
-    Empty, MCP, REST, or Agent Skills. The corresponding configuration file
+    Create a new capability component by choosing what you want to expose from
+    MCP, REST, or Agent Skills. The corresponding configuration file
     is then customized and pushed to GitHub.
   tags:
     - naftiko
@@ -33,8 +33,7 @@ spec:
           maxLength: 64
 
         empty:
-          title: Empty
-          description: Tick to create an empty capability configuration skeleton
+          title: Tick to create an empty capability configuration skeleton
           type: boolean
           default: false
           ui:widget: checkbox
@@ -45,13 +44,20 @@ spec:
             - properties:
                 empty:
                   enum: [true]
+                version:
+                  title: Capability version
+                  type: string
+                  default: v1.0.0-alpha1
+                  pattern: '^v?\d+\.\d+\.\d+(-[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)?$'
+              required:
+                - version
             - properties:
                 empty:
                   enum: [false]
-                adapters:
-                  title: Adapters
+                exposes:
+                  title: Exposes
                   type: array
-                  description: Select one or more adapters
+                  description: Select one or more exposes
                   minItems: 1
                   uniqueItems: true
                   items:
@@ -61,8 +67,14 @@ spec:
                       - REST
                       - Agent Skills
                   ui:widget: checkboxes
+                version:
+                  title: Capability version
+                  type: string
+                  default: v1.0.0-alpha1
+                  pattern: '^v?\d+\.\d+\.\d+(-[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)?$'
               required:
-                - adapters
+                - exposes
+                - version
 
     - title: GitHub repository configuration
       required:
@@ -86,9 +98,10 @@ spec:
       input:
         url: ./skeletons/capabilities
         values:
+          version: ${{ parameters.version }}
           name: ${{ parameters.name }}
           empty: ${{ parameters.empty }}
-          adapters: ${{ parameters.adapters if parameters.adapters else [] }}
+          exposes: ${{ parameters.exposes if parameters.exposes else [] }}
           repoOwner: ${{ (parameters.repoUrl | parseRepoUrl).owner }}
           repoName: ${{ (parameters.repoUrl | parseRepoUrl).repo }}
 
@@ -96,10 +109,16 @@ spec:
       name: Publish on GitHub
       action: publish:github
       input:
-        description: Capability ${{ parameters.name }} (${{ parameters.adapters | join(', ') }}) created via Backstage
+        description: Capability ${{ parameters.name }} (${{ parameters.exposes | join(', ') }}) created via Backstage
         repoUrl: ${{ parameters.repoUrl }}
         defaultBranch: main
       
+    - id: wait
+      name: Wait for repo readiness
+      action: debug:wait
+      input:
+        seconds: 2
+
     - id: register-catalog
       name: Register in Backstage catalog
       action: catalog:register
