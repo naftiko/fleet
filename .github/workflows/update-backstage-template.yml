@@ -1,12 +1,47 @@
-name: Dummy Update Backstage Template
+name: Update Backstage Template
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
   update-backstage-template:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
-      - name: Update Backstage Template
-        run: echo "Updating Backstage Template"
+      - name: Checkout fleet repository
+        uses: actions/checkout@v5
+        with:
+          path: fleet
+
+      - name: Checkout naftiko/backstage-plugin repository
+        uses: actions/checkout@v5
+        with:
+          repository: naftiko/backstage-plugin
+          # naftiko/backstage-plugin is private, use a secret PAT with repo access
+          token: ${{ secrets.BACKSTAGE_PLUGIN_CONTENTS_READ }}
+          path: backstage-plugin
+
+      - name: Copy templates (excluding *.md files)
+        run: |
+          rm -rf fleet/backstage/templates
+          mkdir -p fleet/backstage/templates
+          cp -R backstage-plugin/src/templates/. fleet/backstage/templates/
+          find fleet/backstage/templates -name '*.md' -delete
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ github.token }}
+          path: fleet
+          branch: chore/update-backstage-templates
+          commit-message: "chore: update backstage templates from backstage-plugin"
+          title: "chore: update backstage templates from backstage-plugin"
+          body: |
+            Automated sync from [backstage-plugin](${{ github.server_url }}/naftiko/backstage-plugin).
+          delete-branch: true
