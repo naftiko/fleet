@@ -9,14 +9,12 @@ on:
 jobs:
   update-backstage-template:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
       - name: Checkout fleet repository
         uses: actions/checkout@v5
         with:
+          token: ${{ secrets.FLEET_CONTENTS_WRITE_PR_WRITE }}
           path: fleet
 
       - name: Checkout naftiko/backstage-plugin repository
@@ -37,7 +35,7 @@ jobs:
       - name: Create pull request
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.FLEET_CONTENTS_WRITE_PR_WRITE }}
           path: fleet
           branch: chore/update-backstage-templates
           commit-message: "chore: update backstage templates from backstage-plugin"
