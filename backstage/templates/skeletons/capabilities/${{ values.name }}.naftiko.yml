@@ -1,12 +1,12 @@
-naftiko: "1.0.0-alpha1"
+naftiko: "${{ values.version }}"
 info:
   label: "${{ values.name }}"
 {% if not values.empty %}
-  description: "Exposes weather data via MCP catalog adapters"
+  description: "Exposes weather data via adapters"
 
 capability:
   exposes:
-  {% if 'MCP' in values.adapters %}
+  {% if 'MCP' in values.exposes %}
     - type: mcp
       port: 3001
       namespace: weather-mcp
@@ -29,7 +29,7 @@ capability:
                 windspeed: { type: number, mapping: $.windspeed_10m }
                 weathercode: { type: number, mapping: $.weathercode }
   {% endif %}
-  {% if 'REST' in values.adapters %}
+  {% if 'REST' in values.exposes %}
     - type: rest
       port: 3000
       namespace: weather-api
@@ -63,7 +63,7 @@ capability:
                         title: { type: string, mapping: $.title }
                         severity: { type: string, mapping: $.severity }
   {% endif %}
-  {% if 'Agent Skills' in values.adapters %}
+  {% if 'Agent Skills' in values.exposes %}
     - type: skill
       port: 4000
       namespace: weather-skills
