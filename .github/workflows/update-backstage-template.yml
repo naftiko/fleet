@@ -1,0 +1,12 @@
+name: Dummy Update Backstage Template
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-backstage-template:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Update Backstage Template
+        run: echo "Updating Backstage Template"
