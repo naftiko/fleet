@@ -17,19 +17,19 @@ jobs:
           token: ${{ secrets.FLEET_CONTENTS_WRITE_PR_WRITE }}
           path: fleet
 
-      - name: Checkout naftiko/backstage-plugin repository
+      - name: Checkout naftiko/backstage repository
         uses: actions/checkout@v5
         with:
-          repository: naftiko/backstage-plugin
-          # naftiko/backstage-plugin is private, use a secret PAT with repo access
-          token: ${{ secrets.BACKSTAGE_PLUGIN_CONTENTS_READ }}
-          path: backstage-plugin
+          repository: naftiko/backstage
+          # naftiko/backstage is private, use a secret PAT with repo access
+          token: ${{ secrets.BACKSTAGE_CONTENTS_READ }}
+          path: backstage
 
       - name: Copy templates (excluding *.md files)
         run: |
           rm -rf fleet/backstage/templates
           mkdir -p fleet/backstage/templates
-          cp -R backstage-plugin/src/templates/. fleet/backstage/templates/
+          cp -R backstage/templates/. fleet/backstage/templates/
           find fleet/backstage/templates -name '*.md' -delete
 
       - name: Create pull request
@@ -38,8 +38,8 @@ jobs:
           token: ${{ secrets.FLEET_CONTENTS_WRITE_PR_WRITE }}
           path: fleet
           branch: chore/update-backstage-templates
-          commit-message: "chore: update backstage templates from backstage-plugin"
-          title: "chore: update backstage templates from backstage-plugin"
+          commit-message: "chore: update backstage templates from backstage repository"
+          title: "chore: update backstage templates from backstage repository"
           body: |
-            Automated sync from [backstage-plugin](${{ github.server_url }}/naftiko/backstage-plugin).
+            Automated sync from [backstage repository](${{ github.server_url }}/naftiko/backstage).
           delete-branch: true
