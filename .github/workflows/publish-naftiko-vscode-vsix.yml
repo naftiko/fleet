@@ -13,41 +13,41 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout naftiko/fabric repository
+      - name: Checkout naftiko/vscode repository
         uses: actions/checkout@v5
         with:
-          repository: naftiko/fabric
-          # naftiko/fabric is private, use a secret PAT with repo access to naftiko/fabric
-          token: ${{ secrets.FABRIC_CONTENTS_READ }}
+          repository: naftiko/vscode
+          # naftiko/vscode is private, use a secret PAT with contents permission and read access to naftiko/vscode
+          token: ${{ secrets.VSCODE_CONTENTS_READ }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: frontend/vscode-naftiko/package-lock.json
+          cache-dependency-path: extensions/naftiko-vscode/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: frontend/vscode-naftiko
+        working-directory: extensions/naftiko-vscode
 
       - name: Install vsce
         run: npm install -g @vscode/vsce
 
       - name: Package extension
         run: vsce package
-        working-directory: frontend/vscode-naftiko
+        working-directory: extensions/naftiko-vscode
 
       - name: Upload VSIX artifact
         uses: actions/upload-artifact@v5
         with:
           name: naftiko-vscode-vsix
-          path: frontend/vscode-naftiko/*.vsix
+          path: extensions/naftiko-vscode/*.vsix
 
       - name: Publish to GitHub Releases (fleet)
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          VSIX=$(ls frontend/vscode-naftiko/*.vsix | head -1)
+          VSIX=$(ls extensions/naftiko-vscode/*.vsix | head -1)
           gh release upload "${{ github.ref_name }}" "$VSIX" --clobber --repo ${{ github.repository }}
