@@ -1,0 +1,15 @@
+name: Publish Backstage Assets (dummy)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish-backstage-plugins:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Dummy Publish Backstage Assets
+      run: echo "Dummy Publish Backstage Assets"
