@@ -1,15 +1,67 @@
-name: Publish Backstage Assets (dummy)
+name: Publish Backstage Assets
 
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 1.2.3)'
+        required: true
 
 jobs:
   publish-backstage-plugins:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-    - name: Dummy Publish Backstage Assets
-      run: echo "Dummy Publish Backstage Assets"
+      - name: Checkout naftiko/backstage repository
+        uses: actions/checkout@v5
+        with:
+          repository: naftiko/backstage
+          # naftiko/backstage is private, use a secret PAT with contents permission and read access to naftiko/backstage
+          token: ${{ secrets.BACKSTAGE_CONTENTS_READ }}
+          path: backstage
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@naftiko'
+
+      - name: Install dependencies
+        working-directory: backstage/plugins/scaffolder-backend-module-naftiko
+        run: yarn install --frozen-lockfile
+
+      - name: Generate TypeScript declarations
+        working-directory: backstage/plugins/scaffolder-backend-module-naftiko
+        run: yarn tsc
+
+      - name: Build plugin
+        working-directory: backstage/plugins/scaffolder-backend-module-naftiko
+        run: yarn build
+
+      - name: Set version
+        working-directory: backstage/plugins/scaffolder-backend-module-naftiko
+        run: |
+          VERSION="${{ github.event.inputs.version || '' }}"
+          if [ -z "$VERSION" ]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          npm version "$VERSION" --no-git-tag-version
+
+      - name: Set package entry points for publishing
+        working-directory: backstage/plugins/scaffolder-backend-module-naftiko
+        run: |
+          npm pkg set main=dist/index.cjs.js
+          npm pkg set types=dist-types/src/index.d.ts
+
+      - name: Publish to GitHub Packages
+        working-directory: backstage/plugins/scaffolder-backend-module-naftiko
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
