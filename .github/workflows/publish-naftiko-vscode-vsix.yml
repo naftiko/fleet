@@ -4,6 +4,10 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to upload the VSIX to (e.g. v1.2.3). Leave empty to skip publishing.'
+        required: false
 
 jobs:
   publish:
@@ -44,9 +48,10 @@ jobs:
           path: extensions/naftiko-vscode/*.vsix
 
       - name: Publish to GitHub Releases (fleet)
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || github.event.inputs.version != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VSIX=$(ls extensions/naftiko-vscode/*.vsix | head -1)
-          gh release upload "${{ github.event.release.tag_name }}" "$VSIX" --clobber --repo ${{ github.repository }}
+          TAG="${{ github.event.release.tag_name || github.event.inputs.version }}"
+          gh release upload "$TAG" "$VSIX" --clobber --repo ${{ github.repository }}
