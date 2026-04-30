@@ -1,9 +1,8 @@
 name: Publish Naftiko VSCode VSIX
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
@@ -45,9 +44,9 @@ jobs:
           path: extensions/naftiko-vscode/*.vsix
 
       - name: Publish to GitHub Releases (fleet)
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           VSIX=$(ls extensions/naftiko-vscode/*.vsix | head -1)
-          gh release upload "${{ github.ref_name }}" "$VSIX" --clobber --repo ${{ github.repository }}
+          gh release upload "${{ github.event.release.tag_name }}" "$VSIX" --clobber --repo ${{ github.repository }}

@@ -1,9 +1,8 @@
 name: Publish Backstage Assets
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       version:
@@ -50,7 +49,8 @@ jobs:
         run: |
           VERSION="${{ github.event.inputs.version || '' }}"
           if [ -z "$VERSION" ]; then
-            VERSION="${GITHUB_REF_NAME#v}"
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"
           fi
           npm version "$VERSION" --no-git-tag-version
 
