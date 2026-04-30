@@ -1,121 +1,91 @@
-naftiko: "${{ values.version }}"
+# @naftiko
+---
+naftiko: "1.0.0-alpha3"
 info:
   label: "${{ values.name }}"
-{% if not values.empty %}
-  description: "Exposes weather data via adapters"
+{%- if not values.empty %}
+  description: "Description of your ${{ values.name }} capability" # Please complete the description
 
 capability:
   exposes:
-  {% if 'MCP' in values.exposes %}
+  {%- if 'MCP' in values.exposes %}
     - type: mcp
+      address: "0.0.0.0" # Needed in Docker context. Permits to access the MCP with localhost from outside the container.
       port: 3001
-      namespace: weather-mcp
-      description: "Weather tools for AI agents"
+      namespace: ${{ values.namespaceBase }}-mcp
+      description: "Description of your ${{ values.name }} capability MCP expose" # Please complete the description
       tools:
-        - name: get-current-weather
-          description: "Retrieve current weather conditions for a location"
-          inputParameters:
-            - name: location
-              type: string
-              description: "City name or coordinates (lat,lon)"
-          call: open-meteo.get-current
-          with:
-            location: "$this.weather-mcp.location"
-          outputParameters:
-            - type: object
-              mapping: $.current
-              properties:
-                temperature: { type: number, mapping: $.temperature_2m }
-                windspeed: { type: number, mapping: $.windspeed_10m }
-                weathercode: { type: number, mapping: $.weathercode }
-  {% endif %}
-  {% if 'REST' in values.exposes %}
+      #  - name: get-current-weather
+      #    description: "Retrieve current weather conditions for a location"
+      #    inputParameters:
+      #      - name: location
+      #        type: string
+      #        description: "City name or coordinates (lat,lon)"
+      #    call: open-meteo.get-current
+      #    with:
+      #      location: "$this.weather-mcp.location"
+      #    outputParameters:
+      #      - type: object
+      #        mapping: $.current
+      #        properties:
+      #          temperature: { type: number, mapping: $.temperature_2m }
+      #          windspeed: { type: number, mapping: $.windspeed_10m }
+      #          weathercode: { type: number, mapping: $.weathercode }
+  {%- endif %}
+  {%- if 'REST' in values.exposes %}
     - type: rest
-      port: 3000
-      namespace: weather-api
+      address: "0.0.0.0" # Needed in Docker context. Permits to access the REST API with localhost from outside the container.
+      port: 8080
+      namespace: ${{ values.namespaceBase }}-rest-api
       resources:
-        - path: /weather/current
-          description: "Current weather conditions"
-          operations:
-            - name: get-current
-              method: GET
-              call: open-meteo.get-current
-              outputParameters:
-                - type: object
-                  mapping: $.current
-                  properties:
-                    temperature: { type: number, mapping: $.temperature_2m }
-                    windspeed: { type: number, mapping: $.windspeed_10m }
-                    weathercode: { type: number, mapping: $.weathercode }
+        {%- if values.consumes | length > 0 %}
+        {%- for consumesEntry in values.consumes %}
+        # This is a global path allowing to forward any request to the consumed API.
+        - path: /${{ consumesEntry.namespace }}/{path}
+          description: "Description of your ${{ values.name }} capability REST API expose" # Please complete the description
+          forward:
+            targetNamespace: ${{ consumesEntry.namespace }}
+        {%- endfor %}
+        {%- endif %}
+        # You can also define more specific paths if needed.
+        #- name: ships
+        #  path: "/ships"
+        #  description: "Description of your ${{ values.name }} capability REST API expose" # Please complete the description
+        #  operations:
+        #    - name: list-ships
+        #      method: GET
+        #      call: ${{ consumesEntry.namespace }}.list-ships
 
-        - path: /weather/alerts
-          description: "Active weather alerts"
-          operations:
-            - name: list-alerts
-              method: GET
-              call: open-meteo.list-alerts
-              outputParameters:
-                - type: array
-                  mapping: $.alerts
-                  items:
-                    - type: object
-                      properties:
-                        title: { type: string, mapping: $.title }
-                        severity: { type: string, mapping: $.severity }
-  {% endif %}
-  {% if 'Agent Skills' in values.exposes %}
+  {%- endif %}
+  {%- if 'Agent Skills' in values.exposes %}
     - type: skill
+      address: "0.0.0.0" # Needed in Docker context. Permits to access the skill with localhost from outside the container.
       port: 4000
-      namespace: weather-skills
-      description: "Weather forecast and climate analysis skill catalog"
+      namespace: ${{ values.namespaceBase }}-skills
+      description: "Description of your ${{ values.name }} capability skill expose" # Please complete the description
       skills:
-        - name: weather-forecast
-          description: "Real-time weather data and forecasting"
-          license: Apache-2.0
-          compatibility: "claude-3-5-sonnet,gpt-4o"
-          argument-hint: "Use when the user asks about weather, forecast, temperature, or climate"
-          location: "file:///opt/skills/weather-forecast"
-          tools:
-            - name: current-conditions
-              description: "Get current weather conditions for a specific location"
-              from:
-                sourceNamespace: weather-api
-                action: get-current
-            - name: climate-guide
-              description: "Reference guide for interpreting climate data and weather patterns"
-              instruction: "climate-interpretation-guide.md"
+      #  - name: weather-forecast
+      #    description: "Real-time weather data and forecasting"
+      #    license: Apache-2.0
+      #    compatibility: "claude-3-5-sonnet,gpt-4o"
+      #    argument-hint: "Use when the user asks about weather, forecast, temperature, or climate"
+      #    location: "file:///opt/skills/weather-forecast"
+      #    tools:
+      #      - name: current-conditions
+      #        description: "Get current weather conditions for a specific location"
+      #        from:
+      #          sourceNamespace: weather-api
+      #          action: get-current
+      #      - name: climate-guide
+      #        description: "Reference guide for interpreting climate data and weather patterns"
+      #        instruction: "climate-interpretation-guide.md"
+  {%- endif %}
 
-        - name: alert-monitoring
-          description: "Severe weather alerts and monitoring guidance"
-          argument-hint: "Use when the user needs to check or monitor weather alerts"
-          location: "file:///opt/skills/alert-monitoring"
-          tools:
-            - name: active-alerts
-              description: "List active severe weather alerts for a region"
-              from:
-                sourceNamespace: weather-mcp
-                action: get-current-weather
-            - name: alert-response-guide
-              description: "Guide for responding to severe weather alerts"
-              instruction: "alert-response-guide.md"
-  {% endif %}
-
+  {%- if values.consumes and values.consumes | length > 0 %}
   consumes:
-    - type: http
-      namespace: open-meteo
-      baseUri: "https://api.open-meteo.com/v1/"
-      resources:
-        - name: forecast
-          path: forecast
-          operations:
-            - name: get-current
-              method: GET
-              label: "Get Current Weather"
-
-        - name: alerts
-          path: alerts
-          operations:
-            - name: list-alerts
-              method: GET
-              label: "List Active Alerts"
-{% endif %}
+  {%- for consumesEntry in values.consumes %}
+    - import: ${{ consumesEntry.namespace }}
+      location: ${{ consumesEntry.fileName }}
+  {%- endfor %}
+  {%- endif %}
+{%- endif %}

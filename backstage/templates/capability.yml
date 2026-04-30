@@ -44,13 +44,6 @@ spec:
             - properties:
                 empty:
                   enum: [true]
-                version:
-                  title: Capability version
-                  type: string
-                  default: v1.0.0-alpha1
-                  pattern: '^v?\d+\.\d+\.\d+(-[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)?$'
-              required:
-                - version
             - properties:
                 empty:
                   enum: [false]
@@ -67,14 +60,23 @@ spec:
                       - REST
                       - Agent Skills
                   ui:widget: checkboxes
-                version:
-                  title: Capability version
-                  type: string
-                  default: v1.0.0-alpha1
-                  pattern: '^v?\d+\.\d+\.\d+(-[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*)?$'
               required:
                 - exposes
-                - version
+
+    - title: API consumption
+      properties:
+        consumedCatalogApis:
+          title: Consumed APIs (OpenAPI)
+          type: array
+          description: Select the APIs this capability will consume from the catalog. Only APIs with an OpenAPI spec are displayed.
+          ui:field: MultiEntityPicker
+          ui:options:
+            catalogFilter:
+              kind: API
+              spec.type: openapi
+            defaultKind: API
+          items:
+            type: string
 
     - title: GitHub repository configuration
       required:
@@ -92,16 +94,24 @@ spec:
   # Execution steps of scaffolder
   # ──────────────────────────────────────────────────
   steps:
+    - id: import-openapi
+      name: Convert selected catalog APIs (OpenAPI) into Naftiko consumes files
+      if: ${{ (parameters.consumedCatalogApis | length) > 0 }}
+      action: naftiko:import:openapi
+      input:
+        consumedCatalogApis: ${{ parameters.consumedCatalogApis }}
+
     - id: fetch-skeleton
       name: Fetch skeleton capability files
       action: fetch:template
       input:
         url: ./skeletons/capabilities
         values:
-          version: ${{ parameters.version }}
           name: ${{ parameters.name }}
+          namespaceBase: ${{ parameters.name | replace(' ', '-') | replace(r/(?<=[a-zA-Z0-9])([A-Z])/g, '-$1') | lower }}
           empty: ${{ parameters.empty }}
           exposes: ${{ parameters.exposes if parameters.exposes else [] }}
+          consumes: ${{ steps['import-openapi'].output.consumes | default([]) }}
           repoOwner: ${{ (parameters.repoUrl | parseRepoUrl).owner }}
           repoName: ${{ (parameters.repoUrl | parseRepoUrl).repo }}
 
