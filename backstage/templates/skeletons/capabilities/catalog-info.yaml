@@ -2,7 +2,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: ${{ values.name }}
-  description: Composant ${{ values.name }} créé via Backstage
+  description: ${{ values.name }} component created by Backstage
   tags:
     - naftiko
     - capability
@@ -13,7 +13,7 @@ metadata:
     {%- endif %}
   links:
     - url: https://github.com/${{ values.repoOwner }}/${{ values.repoName }}
-      title: Voir les fichiers du dépôt
+      title: View repository on GitHub
       icon: github
   annotations:
     backstage.io/source-location: url:https://github.com/${{ values.repoOwner }}/${{ values.repoName }}/blob/main/
@@ -22,4 +22,9 @@ spec:
   type: service
   lifecycle: experimental
   owner: user:guest
-  
+  {%- if values.consumes and values.consumes | length > 0 %}
+  consumesApis:
+    {%- for consumesEntry in values.consumes %}
+    - ${{ consumesEntry.catalogEntityRef }}
+    {%- endfor %}
+  {%- endif %}
