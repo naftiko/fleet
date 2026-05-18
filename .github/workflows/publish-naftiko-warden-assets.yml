@@ -1,0 +1,12 @@
+name: Dummy Publish Naftiko Warden Assets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-backstage-plugins:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout naftiko/warden repository
+        run: echo "Dummy Publish Naftiko Warden Assets."
