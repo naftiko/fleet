@@ -1,0 +1,12 @@
+name: Publish Naftiko Crafter Assets
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-vsix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: dummy echo
+        run: echo "Publish Naftiko Crafter Assets"
