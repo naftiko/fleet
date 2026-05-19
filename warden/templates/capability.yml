@@ -1,14 +1,15 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: naftiko-capability-template
-  title: Naftiko Capability
+  name: naftiko-warden-capability-template
+  title: Naftiko Warden
   description: >
     Create a new capability component by choosing what you want to expose from
     MCP, REST, or Agent Skills. The corresponding configuration file
     is then customized and pushed to GitHub.
   tags:
     - naftiko
+    - warden
     - capability
 spec:
   owner: user:guest
@@ -95,9 +96,9 @@ spec:
   # ──────────────────────────────────────────────────
   steps:
     - id: import-openapi
-      name: Convert selected catalog APIs (OpenAPI) into Naftiko consumes files
+      name: Convert selected catalog APIs (OpenAPI) into Ikanos consumes files
       if: ${{ (parameters.consumedCatalogApis | length) > 0 }}
-      action: naftiko:import:openapi
+      action: naftiko-warden:import:openapi
       input:
         consumedCatalogApis: ${{ parameters.consumedCatalogApis }}
 
