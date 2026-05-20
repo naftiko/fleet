@@ -1,12 +1,57 @@
 name: Publish Naftiko Crafter Assets
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to upload the VSIX to (e.g. v1.2.3). Leave empty to skip publishing.'
+        required: false
 
 jobs:
   publish-vsix:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-      - name: dummy echo
-        run: echo "Publish Naftiko Crafter Assets"
+      - name: Checkout naftiko/crafter repository
+        uses: actions/checkout@v5
+        with:
+          repository: naftiko/crafter
+          # naftiko/crafter is private, use a secret PAT with contents permission and read access to naftiko/crafter
+          token: ${{ secrets.CRAFTER_CONTENTS_READ }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: extensions/naftiko-crafter/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: extensions/naftiko-crafter
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Package extension
+        run: vsce package
+        working-directory: extensions/naftiko-crafter
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: naftiko-crafter-vsix
+          path: extensions/naftiko-crafter/*.vsix
+
+      - name: Publish to GitHub Releases (fleet)
+        if: github.event_name == 'release' || github.event.inputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VSIX=$(ls extensions/naftiko-crafter/*.vsix | head -1)
+          TAG="${{ github.event.release.tag_name || github.event.inputs.version }}"
+          gh release upload "$TAG" "$VSIX" --clobber --repo ${{ github.repository }}
