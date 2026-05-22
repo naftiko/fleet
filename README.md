@@ -9,10 +9,10 @@ The Community Edition is provided as freeware, with upcoming Standard and Enterp
 ### [Ikanos](https://github.com/naftiko/ikanos/)
 Open Source project (Apache 2.0) to create and run capabilities using spec-driven integration.
 
- ### [Naftiko Crafter](https://github.com/naftiko/fleet/wiki/Naftiko-Crafter-VS-Code-Extension)
+ ### [Naftiko Crafter](https://github.com/naftiko/fleet/wiki/Naftiko-Crafter)
 Free extension for Visual Studio Code to help with the editing and linting of Ikanos capabilities.
 
-### [Naftiko Warden](https://github.com/naftiko/fleet/wiki/Naftiko-Warden-custom-Templates-for-Backstage)
+### [Naftiko Warden](https://github.com/naftiko/fleet/wiki/Naftiko-Warden)
 Free custom templates for CNCF's Backstage to help with the scaffolding and cataloguing of Ikanos capabilities.
 
 ### Naftiko Skipper
