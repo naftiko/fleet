@@ -5,6 +5,7 @@ metadata:
   description: ${{ values.name }} component created by Backstage
   tags:
     - naftiko
+    - warden
     - capability
     {%- if not values.empty %}
     {%- for adapter in values.adapters %}
