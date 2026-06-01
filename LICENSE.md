@@ -1,7 +1,7 @@
 NAFTIKO END USER LICENSE AGREEMENT (EULA)
 PRODUCT: Naftiko Fleet
 
-VERSION: 1.0 Alpha 1
+VERSION: 1.0 Alpha 3
 
 LICENSE TYPE: Freeware (Closed Source)
 
