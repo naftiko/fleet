@@ -1,0 +1,308 @@
+# =============================================================================
+# Capability CRD — naftiko.io/v1alpha3/Capability
+# =============================================================================
+# This CRD tells Kubernetes to accept a new resource type called "Capability".
+# Once applied, SREs can do: kubectl get capabilities (or kubectl get cap)
+#
+# The .spec either:
+#   A) embeds the full ikanos spec YAML inline (ikanos + info + capability + binds)
+#   B) references a ConfigMap via specRef (recommended — decouples spec lifecycle)
+#
+# The Naftiko Skipper operator watches these CRs and reconciles them into
+# running workloads (Deployment, Service, ConfigMap, Ingress, ServiceMonitor).
+# =============================================================================
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: capabilities.naftiko.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  group: naftiko.io
+  names:
+    kind: Capability
+    listKind: CapabilityList
+    plural: capabilities
+    singular: capability
+    shortNames:
+    - cap
+    categories:
+    - naftiko
+  scope: Namespaced
+  versions:
+  - name: v1alpha3
+    served: true
+    storage: true
+    subresources:
+      status: {}
+    additionalPrinterColumns:
+    - name: Label
+      type: string
+      description: Human-readable name of the capability
+      jsonPath: .spec.info.label
+    - name: Phase
+      type: string
+      description: Current phase of the capability
+      jsonPath: .status.phase
+    - name: Endpoint
+      type: string
+      description: Internal endpoint URL
+      jsonPath: .status.endpoint
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    schema:
+      openAPIV3Schema:
+        type: object
+        description: >
+          A Capability represents a complete integration capability defined by the
+          ikanos specification. The Naftiko Skipper operator reconciles this resource
+          into a running workload with generated Deployment, Service, ConfigMap,
+          and optionally Ingress and ServiceMonitor resources.
+        properties:
+          spec:
+            type: object
+            description: The capability specification
+            x-kubernetes-preserve-unknown-fields: true
+            properties:
+
+              # ── Spec reference (recommended) ────────────────────────────────
+              # Points to a ConfigMap containing the full ikanos YAML.
+              # Mutually exclusive with inline spec fields (ikanos, info, capability, binds).
+              specRef:
+                type: object
+                description: >
+                  Reference to a ConfigMap containing the full ikanos YAML spec.
+                  Recommended over inline spec — decouples the spec lifecycle from
+                  the CR lifecycle and avoids large CR objects.
+                properties:
+                  configMap:
+                    type: string
+                    description: Name of the ConfigMap in the same namespace
+                  key:
+                    type: string
+                    description: Key inside the ConfigMap 
+                    default: capability.yaml
+                required:
+                - configMap
+
+              # ── Inline spec fields ──────────────────────────────────────────
+              # Used when the full ikanos spec is embedded directly in the CR.
+              # Not required when specRef is set.
+
+              ikanos:
+                type: string
+                description: >
+                  Version of the ikanos specification in use (e.g. "1.0.0-alpha4").
+                  Required for inline specs; not required when specRef is used.
+
+              info:
+                type: object
+                description: Capability metadata
+                properties:
+                  label:
+                    type: string
+                    description: Display name of the capability
+                  description:
+                    type: string
+                    description: Description of the capability
+                  tags:
+                    type: array
+                    description: Tags for discovery and filtering
+                    items:
+                      type: string
+                  labels:
+                    type: object
+                    description: >
+                      Key-value labels propagated to all generated Kubernetes resources.
+                      Used for cost allocation, label selectors, and CapabilityClass
+                      selection via naftiko.io/tier.
+                    additionalProperties:
+                      type: string
+                  created:
+                    type: string
+                  modified:
+                    type: string
+                  stakeholders:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        role:
+                          type: string
+                        fullName:
+                          type: string
+                        email:
+                          type: string
+                      required:
+                      - role
+                      - fullName
+                required:
+                - label
+                - description
+
+              binds:
+                type: array
+                description: >
+                  External secret sources for variable injection into the spec.
+                  Each bind namespace resolves to a Kubernetes Secret named
+                  {capability-name}-bind-{parent-dir}.
+                items:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+
+              consumes:
+                type: array
+                description: Consumed API adapters declared at the top level (global scope)
+                items:
+                  type: object
+                  x-kubernetes-preserve-unknown-fields: true
+
+              capability:
+                type: object
+                description: Capability technical configuration — exposes, consumes, aggregates
+                properties:
+                  binds:
+                    type: array
+                    description: External secret sources (capability level)
+                    items:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                  exposes:
+                    type: array
+                    description: >
+                      Exposed server adapters. Each entry gets its own named port on the
+                      Service and Deployment. Supported types: rest, mcp, skill, control.
+                    items:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                      properties:
+                        type:
+                          type: string
+                          description: >
+                            Adapter type. Use "control" for the observability port
+                            (/metrics, /health/live, /health/ready).
+                          enum:
+                          - rest
+                          - mcp
+                          - skill
+                          - control
+                        port:
+                          type: integer
+                          description: Listening port
+                        namespace:
+                          type: string
+                          description: Unique identifier for this exposed adapter
+                        lifecycle:
+                          type: string
+                          description: >
+                            Lifecycle stage of this exposed adapter.
+                            Maps to Backstage entity lifecycle.
+                          enum:
+                          - experimental
+                          - production
+                          - deprecated
+                        tags:
+                          type: array
+                          description: >
+                            Tags classifying this adapter. "public" triggers Ingress creation.
+                          items:
+                            type: string
+                        authentication:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                  consumes:
+                    type: array
+                    description: >
+                      Consumed API adapters (capability level).
+                      Entries with `import` + `from` are backed by a ConfigMap named
+                      {capability-name}-import-{import-namespace}.
+                    items:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+                      properties:
+                        namespace:
+                          type: string
+                        type:
+                          type: string
+                        baseUri:
+                          type: string
+                        description:
+                          type: string
+                        import:
+                          type: string
+                          description: >
+                            Import alias. When set, `from` must also be specified.
+                            The operator mounts the referenced file at /data/{from}.
+                        from:
+                          type: string
+                          description: >
+                            Relative path to the imported consumes file
+                            (e.g. ./shared/registry-consumes.yml).
+                            Used with `import`. Replaces the legacy `location` field.
+                        tags:
+                          type: array
+                          items:
+                            type: string
+                        authentication:
+                          type: object
+                          x-kubernetes-preserve-unknown-fields: true
+                  aggregates:
+                    type: array
+                    description: Domain aggregates defining reusable multi-step flows
+                    items:
+                      type: object
+                      x-kubernetes-preserve-unknown-fields: true
+
+          status:
+            type: object
+            description: Observed state of the capability — written by the operator, read-only
+            properties:
+              phase:
+                type: string
+                description: High-level summary of capability state
+                enum:
+                - Pending
+                - Running
+                - Degraded
+                - Failed
+              endpoint:
+                type: string
+                description: >
+                  Internal cluster endpoint URL of the primary (first non-control) port
+                  (e.g. http://name.namespace.svc.cluster.local:3001)
+              observedGeneration:
+                type: integer
+                format: int64
+                description: Last .metadata.generation the operator successfully reconciled
+              conditions:
+                type: array
+                description: Standard Kubernetes conditions
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      description: >
+                        Condition type. One of: Ready, SecretsSynced, Degraded, CircuitOpen
+                    status:
+                      type: string
+                      enum:
+                      - "True"
+                      - "False"
+                      - "Unknown"
+                    reason:
+                      type: string
+                      description: Machine-readable reason for the condition
+                    message:
+                      type: string
+                      description: Human-readable message
+                    lastTransitionTime:
+                      type: string
+                      format: date-time
+                      description: Last time the condition transitioned
+                  required:
+                  - type
+                  - status
+        required:
+        - spec

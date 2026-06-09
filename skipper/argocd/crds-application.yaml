@@ -1,0 +1,31 @@
+# =============================================================================
+# ArgoCD Application — Naftiko CRDs
+# =============================================================================
+# This ensures the Capability and CapabilityClass types exist in the
+# Kubernetes API server before anything tries to watch or create them.
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: naftiko-crds
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: naftiko
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/naftiko/fleet.git
+    targetRevision: HEAD
+    path: skipper/crds
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: naftiko-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - Replace=true
