@@ -1,0 +1,81 @@
+# =============================================================================
+# ArgoCD ApplicationSet — Naftiko Capabilities
+# =============================================================================
+#
+# This template automatically creates one ArgoCD Application per capability
+# directory in your Git repository.
+#
+# Usage:
+#   1. Copy this file:
+#        cp applicationset.template.yaml my-capabilities.yaml
+#
+#   2. Replace the two placeholders:
+#        MY_CAPABILITIES  → a name for this ApplicationSet
+#                           (e.g. fleet-capabilities, shipyard-capabilities)
+#        REPO_URL         → your capabilities Git repository URL
+#
+#   3. Apply to the cluster:
+#        kubectl apply -f my-capabilities.yaml
+#
+# Expected repository structure:
+#
+#   your-repo/
+#   └── capabilities/
+#       ├── hello-world/
+#       │   ├── configmap.yaml      ← ikanos spec as ConfigMap
+#       │   └── capability.yaml     ← Capability CR (specRef pattern)
+#       └── shipyard/
+#           ├── configmap.yaml
+#           └── capability.yaml
+#
+# Each directory becomes one ArgoCD Application named "cap-<directory>"
+# and one running Naftiko capability.
+#
+# Prerequisites:
+#   - Naftiko Skipper operator running (helm install naftiko-skipper ...)
+#   - ArgoCD installed and connected to your Git repository
+# =============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  # ── Name this ApplicationSet after your capabilities repo ─────────────────
+  name: MY_CAPABILITIES
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: naftiko
+    app.kubernetes.io/managed-by: naftiko-skipper
+spec:
+  goTemplate: true
+  generators:
+    - git:
+        # ── Your capabilities Git repository ──────────────────────────────
+        repoURL: REPO_URL
+        revision: HEAD
+        directories:
+          # Use "capabilities/*" if capabilities are in a subfolder
+          # Use "*" if capabilities are directly at the repo root
+          - path: capabilities/*
+  template:
+    metadata:
+      # One ArgoCD Application per capability — named "cap-<directory>"
+      name: 'cap-{{.path.basename}}'
+      labels:
+        app.kubernetes.io/part-of: naftiko
+        naftiko.io/capability: '{{.path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: REPO_URL
+        targetRevision: HEAD
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: default
+      syncPolicy:
+        automated:
+          prune: true       # removes capability when directory is deleted from Git
+          selfHeal: true    # restores capability if manually modified in cluster
+        syncOptions:
+          - ApplyOutOfSyncOnly=true
+          - CreateNamespace=false

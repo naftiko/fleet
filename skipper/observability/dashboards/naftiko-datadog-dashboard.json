@@ -1,0 +1,16 @@
+{
+  "title": "Naftiko — RED Metrics",
+  "description": "Naftiko engine observability — Rate, Errors, Duration",
+  "layout_type": "free",
+  "widgets": [
+    {"definition":{"title":"Active Capabilities","type":"query_value","requests":[{"q":"avg:ikanos_capability_active{*}","aggregator":"last"}],"precision":0},"layout":{"x":0,"y":0,"width":2,"height":2}},
+    {"definition":{"title":"Request Rate","type":"query_value","requests":[{"q":"sum:ikanos_request_total{*}.as_rate()","aggregator":"avg"}],"autoscale":true},"layout":{"x":2,"y":0,"width":2,"height":2}},
+    {"definition":{"title":"Error Rate","type":"query_value","requests":[{"q":"sum:ikanos_request_errors{*}.as_rate()","aggregator":"avg"}],"autoscale":true},"layout":{"x":4,"y":0,"width":2,"height":2}},
+    {"definition":{"title":"Request Rate by Adapter","type":"timeseries","requests":[{"q":"sum:ikanos_request_total{*} by {ikanos_adapter_type}.as_rate()","display_type":"line"}]},"layout":{"x":0,"y":2,"width":6,"height":3}},
+    {"definition":{"title":"Request Duration (p50/p95/p99)","type":"timeseries","requests":[{"q":"p50:ikanos_request_duration_seconds{*}","display_type":"line"},{"q":"p95:ikanos_request_duration_seconds{*}","display_type":"line"},{"q":"p99:ikanos_request_duration_seconds{*}","display_type":"line"}]},"layout":{"x":6,"y":2,"width":6,"height":3}},
+    {"definition":{"title":"HTTP Client Rate by Host","type":"timeseries","requests":[{"q":"sum:ikanos_http_client_total{*} by {server_address}.as_rate()","display_type":"bars"}]},"layout":{"x":0,"y":5,"width":6,"height":3}},
+    {"definition":{"title":"HTTP Client Duration p95","type":"timeseries","requests":[{"q":"p95:ikanos_http_client_duration_seconds{*} by {server_address}","display_type":"line"}]},"layout":{"x":6,"y":5,"width":6,"height":3}}
+  ],
+  "template_variables":[],
+  "notify_list":[]
+}
