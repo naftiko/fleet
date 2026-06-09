@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: naftiko-defaults
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: naftiko
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"   # after crds, before operator
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/naftiko/fleet.git
+    targetRevision: HEAD
+    path: skipper/defaults 
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ApplyOutOfSyncOnly=true

@@ -1,0 +1,35 @@
+apiVersion: naftiko.io/v1alpha3
+kind: CapabilityClass
+metadata:
+  name: premium
+  labels:
+    app.kubernetes.io/part-of: naftiko
+spec:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  hpa:
+    minReplicas: 2
+    maxReplicas: 20
+    targetRequestsPerSecond: 1000
+  resilience:
+    circuitBreaker:
+      failureRateThreshold: 30
+      slidingWindowSize: 20
+      waitDurationInOpenState: 15s
+      permittedCallsInHalfOpenState: 5
+    retry:
+      maxAttempts: 5
+      waitDuration: 200ms
+      retryOnResultPredicate: "statusCode >= 500"
+    bulkhead:
+      maxConcurrentCalls: 100
+      maxWaitDuration: 50ms
+    rateLimit:
+      limitForPeriod: 1000
+      limitRefreshPeriod: 1s
+      timeoutDuration: 0ms

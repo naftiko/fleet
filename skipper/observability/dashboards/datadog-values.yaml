@@ -1,0 +1,30 @@
+datadog:
+  apiKeyExistingSecret: datadog-secret
+  site: datadoghq.eu
+  clusterName: localdev
+  kubelet:
+    tlsVerify: false
+  otlp:
+    receiver:
+      protocols:
+        http:
+          enabled: true
+        grpc:
+          enabled: true
+  apm:
+    portEnabled: true
+  systemProbe:
+    enabled: false
+  securityAgent:
+    runtime:
+      enabled: false
+  networkMonitoring:
+    enabled: false
+  processAgent:
+    enabled: false
+  env:
+    - name: DD_HOSTNAME
+      value: localdev-control-plane
+
+agents:
+  useHostNetwork: false

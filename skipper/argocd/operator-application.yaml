@@ -1,0 +1,31 @@
+# =============================================================================
+# ArgoCD Application — Naftiko Skipper
+# =============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: naftiko-skipper
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: naftiko
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: ghcr.io/naftiko/skipper/helm
+    chart: naftiko-skipper
+    targetRevision: "1.0.0-alpha4-SNAPSHOT"
+    helm:
+      values: |
+        capabilityClasses:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: naftiko-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
