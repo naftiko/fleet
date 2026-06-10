@@ -19,6 +19,7 @@ metadata:
   annotations:
     backstage.io/source-location: url:https://github.com/${{ values.repoOwner }}/${{ values.repoName }}/blob/main/
     github.com/project-slug: ${{ values.repoOwner }}/${{ values.repoName }}
+    backstage.io/techdocs-ref: dir:.
 spec:
   type: service
   lifecycle: experimental
@@ -29,3 +30,5 @@ spec:
     - ${{ consumesEntry.catalogEntityRef }}
     {%- endfor %}
   {%- endif %}
+  providesApis:
+    - api:naftiko-warden/${{ values.name }}-api

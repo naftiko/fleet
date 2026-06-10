@@ -116,6 +116,12 @@ spec:
           repoOwner: ${{ (parameters.repoUrl | parseRepoUrl).owner }}
           repoName: ${{ (parameters.repoUrl | parseRepoUrl).repo }}
 
+    - id: export-openapi
+      name: Export capability exposed api to OpenAPI spec
+      action: naftiko-warden:export:openapi
+      input:
+        capabilityFile: ${{ parameters.name }}.ikanos.yml
+
     - id: publish-github
       name: Publish on GitHub
       action: publish:github
@@ -130,12 +136,19 @@ spec:
       input:
         seconds: 2
 
-    - id: register-catalog
-      name: Register in Backstage catalog
+    - id: register-provided-apis-in-catalog
+      name: Register provided APIs in Backstage catalog
       action: catalog:register
       input:
         repoContentsUrl: ${{ steps['publish-github'].output.repoContentsUrl }}
-        catalogInfoPath: /catalog-info.yaml
+        catalogInfoPath: /backstage/provided-apis/catalog-info.yaml
+
+    - id: register-service-in-catalog
+      name: Register capability service in Backstage catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish-github'].output.repoContentsUrl }}
+        catalogInfoPath: /backstage/service/catalog-info.yaml
 
   # ──────────────────────────────────────────────────
   # Result displayed to the user after creation
@@ -148,4 +161,4 @@ spec:
         url: ${{ steps['publish-github'].output.repoContentsUrl }}
       - title: View the capability component in the catalog
         icon: catalog
-        entityRef: ${{ steps['register-catalog'].output.entityRef }}
+        entityRef: ${{ steps['register-service-in-catalog'].output.entityRef }}
