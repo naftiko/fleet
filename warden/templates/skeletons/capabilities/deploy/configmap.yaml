@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ${{ values.name }}-spec
+  namespace: ${{ values.namespace | default("default") }}
+data:
+  capability.yaml: |
+    # @ikanos
+    ---
+    ikanos: "1.0.0-alpha4"
+    info:
+      display: "${{ values.name }}"
+    {%- if not values.empty %}
+      description: "Description of your ${{ values.name }} capability" # Please complete the description
+
+    capability:
+      exposes:
+      {%- if 'MCP' in values.exposes %}
+        - type: mcp
+          address: "0.0.0.0"
+          port: 3001
+          namespace: ${{ values.namespaceBase }}-mcp
+          description: "Description of your ${{ values.name }} capability MCP expose"
+          tools:
+      {%- endif %}
+      {%- if 'REST' in values.exposes %}
+        - type: rest
+          address: "0.0.0.0"
+          port: 8080
+          namespace: ${{ values.namespaceBase }}-rest-api
+          resources:
+            {%- if values.consumes | length > 0 %}
+            {%- for consumesEntry in values.consumes %}
+            ${{ consumesEntry.namespace }}:
+              path: /${{ consumesEntry.namespace }}/{path}
+              forward:
+                targetNamespace: ${{ consumesEntry.namespace }}
+            {%- endfor %}
+            {%- endif %}
+      {%- endif %}
+      {%- if 'Agent Skills' in values.exposes %}
+        - type: skill
+          address: "0.0.0.0"
+          port: 4000
+          namespace: ${{ values.namespaceBase }}-skills
+          description: "Description of your ${{ values.name }} capability skill expose"
+          skills:
+      {%- endif %}
+
+      {%- if values.consumes and values.consumes | length > 0 %}
+      consumes:
+      {%- for consumesEntry in values.consumes %}
+        - import: ${{ consumesEntry.namespace }}
+          from: ${{ consumesEntry.fileName }}
+      {%- endfor %}
+      {%- endif %}
+    {%- endif %}
