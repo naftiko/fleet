@@ -1,0 +1,10 @@
+apiVersion: naftiko.io/v1alpha3
+kind: Capability
+metadata:
+  name: ${{ values.name }}
+  namespace: ${{ values.namespace | default("default") }}
+  labels:
+    backstage.io/kubernetes-id: ${{ values.name }}
+spec:
+  specRef:
+    configMap: ${{ values.name }}-spec
