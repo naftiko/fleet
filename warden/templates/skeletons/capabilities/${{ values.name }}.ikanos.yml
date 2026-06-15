@@ -1,8 +1,8 @@
 # @ikanos
 ---
-ikanos: "1.0.0-alpha3"
+ikanos: "1.0.0-alpha4"
 info:
-  label: "${{ values.name }}"
+  display: "${{ values.name }}"
 {%- if not values.empty %}
   description: "Description of your ${{ values.name }} capability" # Please complete the description
 
@@ -40,8 +40,9 @@ capability:
       resources:
         {%- if values.consumes | length > 0 %}
         {%- for consumesEntry in values.consumes %}
-        # This is a global path allowing to forward any request to the consumed API.
-        - path: /${{ consumesEntry.namespace }}/{path}
+        ${{ consumesEntry.namespace }}:
+          # This is a global path allowing to forward any request to the consumed API.
+          path: /${{ consumesEntry.namespace }}/{path}
           description: "Description of your ${{ values.name }} capability REST API expose" # Please complete the description
           forward:
             targetNamespace: ${{ consumesEntry.namespace }}
@@ -85,7 +86,7 @@ capability:
   consumes:
   {%- for consumesEntry in values.consumes %}
     - import: ${{ consumesEntry.namespace }}
-      location: ${{ consumesEntry.fileName }}
+      from: ${{ consumesEntry.fileName }}
   {%- endfor %}
   {%- endif %}
 {%- endif %}
