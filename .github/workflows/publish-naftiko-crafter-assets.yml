@@ -8,6 +8,9 @@ on:
       version:
         description: 'Release tag to upload the VSIX to (e.g. v1.2.3). Leave empty to skip publishing.'
         required: false
+      polychro_run_id:
+        description: 'Polychro Actions run ID to grab the native binaries from (e.g. 27817125654). Leave empty to use a Polychro release instead.'
+        required: false
 
 jobs:
   publish-vsix:
@@ -33,6 +36,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: extensions/naftiko-crafter
+
+      - name: Fetch Polychro native binaries
+        # Source selection:
+        #  - Default (release events / manual without run id): pull the binaries from a
+        #    Polychro RELEASE. naftiko/polychro is public, so the automatic GITHUB_TOKEN is
+        #    only needed to raise the API rate limit.
+        #  - Manual with polychro_run_id: pull the binaries straight from an Actions RUN's
+        #    artifacts (before any release exists). Downloading run artifacts ALWAYS requires
+        #    a PAT with actions:read on naftiko/polychro, even though the repo is public — the
+        #    workflow's own GITHUB_TOKEN cannot read another repo's artifacts.
+        run: npm run fetch-binaries
+        working-directory: extensions/naftiko-crafter
+        env:
+          GITHUB_TOKEN: ${{ github.event.inputs.polychro_run_id != '' && secrets.POLYCHRO_ACTIONS_READ || github.token }}
+          POLYCHRO_RUN_ID: ${{ github.event.inputs.polychro_run_id }}
+          # Used only when polychro_run_id is empty: always pull the latest Polychro release.
+          POLYCHRO_VERSION: latest
 
       - name: Install vsce
         run: npm install -g @vscode/vsce
