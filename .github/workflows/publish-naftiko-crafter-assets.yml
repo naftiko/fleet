@@ -54,6 +54,43 @@ jobs:
           # Used only when polychro_run_id is empty: always pull the latest Polychro release.
           POLYCHRO_VERSION: latest
 
+      - name: Write Polychro version and date
+        # Update infos.yaml in place (preserving any other fields) with:
+        #  - date: the current date
+        #  - polychro.version: the version matching the binaries fetched above.
+        #      * If polychro_run_id is set: use the run id itself as the version.
+        #      * Otherwise: use the tag of the latest Polychro release.
+        working-directory: extensions/naftiko-crafter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          POLYCHRO_RUN_ID: ${{ github.event.inputs.polychro_run_id }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${POLYCHRO_RUN_ID}" ]; then
+            POLYCHRO_VERSION="${POLYCHRO_RUN_ID}"
+          else
+            # /releases/latest ignores pre-releases; naftiko/polychro only publishes
+            # pre-releases (e.g. v1.0.0-alphaN), so list releases and take the most recent one.
+            POLYCHRO_VERSION=$(gh release list --repo naftiko/polychro --limit 1 --json tagName --jq '.[0].tagName')
+          fi
+
+          if [ -z "${POLYCHRO_VERSION}" ]; then
+            echo "Could not resolve the Polychro version" >&2
+            exit 1
+          fi
+
+          CURRENT_DATE=$(date -u +%Y-%m-%d)
+          INFOS_FILE=src/resources/infos.yaml
+
+          echo "Polychro version: ${POLYCHRO_VERSION}"
+          echo "Date: ${CURRENT_DATE}"
+
+          mkdir -p "$(dirname "${INFOS_FILE}")"
+          touch "${INFOS_FILE}"
+          POLYCHRO_VERSION="${POLYCHRO_VERSION}" CURRENT_DATE="${CURRENT_DATE}" \
+            yq -i '.date = strenv(CURRENT_DATE) | .polychro.version = strenv(POLYCHRO_VERSION)' "${INFOS_FILE}"
+
       - name: Install vsce
         run: npm install -g @vscode/vsce
 
