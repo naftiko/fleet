@@ -1,0 +1,171 @@
+# =============================================================================
+# CapabilityClass CRD — naftiko.io/v1alpha1/CapabilityClass
+# =============================================================================
+# Cluster-scoped resource that defines resource tiers for capabilities.
+# The operator uses info.labels["naftiko.io/tier"] from each Capability CR
+# to select the matching CapabilityClass and derive:
+#   - Pod resource requests/limits
+#   - HPA autoscaling parameters
+#   - Resilience4j defaults (circuit breaker, retry, bulkhead, rate limiter)
+#
+# SREs manage blast radius at the class level without touching individual
+# capability specs.
+# =============================================================================
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: capabilityclasses.naftiko.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  group: naftiko.io
+  names:
+    kind: CapabilityClass
+    listKind: CapabilityClassList
+    plural: capabilityclasses
+    singular: capabilityclass
+    shortNames:
+    - capclass
+    categories:
+    - naftiko
+  scope: Cluster
+  versions:
+  - name: v1alpha3
+    served: true
+    storage: true
+    additionalPrinterColumns:
+    - name: Memory Request
+      type: string
+      jsonPath: .spec.resources.requests.memory
+    - name: CPU Request
+      type: string
+      jsonPath: .spec.resources.requests.cpu
+    - name: Min Replicas
+      type: integer
+      jsonPath: .spec.hpa.minReplicas
+    - name: Max Replicas
+      type: integer
+      jsonPath: .spec.hpa.maxReplicas
+    - name: Age
+      type: date
+      jsonPath: .metadata.creationTimestamp
+    schema:
+      openAPIV3Schema:
+        type: object
+        description: >
+          A CapabilityClass defines resource and resilience defaults for a tier of Naftiko capabilities. Capabilities select their class via info.labels["naftiko.io/tier"]. The operator uses the class to set resource requests/limits, HPA parameters, and Resilience4j configuration on generated Deployments.
+        properties:
+          spec:
+            type: object
+            description: Class specification
+            properties:
+              # ============================================================
+              # Pod resource requests and limits
+              # ============================================================
+              resources:
+                type: object
+                description: Resource requirements for the capability pod
+                properties:
+                  requests:
+                    type: object
+                    properties:
+                      memory:
+                        type: string
+                        description: "Memory request (e.g. 256Mi)"
+                      cpu:
+                        type: string
+                        description: "CPU request (e.g. 250m)"
+                  limits:
+                    type: object
+                    properties:
+                      memory:
+                        type: string
+                        description: "Memory limit (e.g. 512Mi)"
+                      cpu:
+                        type: string
+                        description: "CPU limit (e.g. 500m)"
+
+              # ============================================================
+              # Horizontal Pod Autoscaler parameters
+              # ============================================================
+              hpa:
+                type: object
+                description: HPA configuration
+                properties:
+                  minReplicas:
+                    type: integer
+                    minimum: 1
+                    description: Minimum number of replicas
+                  maxReplicas:
+                    type: integer
+                    minimum: 1
+                    description: Maximum number of replicas
+                  targetRequestsPerSecond:
+                    type: integer
+                    description: Target requests/second triggering scale-up
+
+              # ============================================================
+              # Resilience4j defaults
+              # Injected as environment variables into the engine container.
+              # Each consumed namespace gets its own independent instance.
+              # ============================================================
+              resilience:
+                type: object
+                description: >
+                  Resilience4j defaults for all consumed namespaces. Per-namespace overrides via consumes[].tags (e.g. best-effort vs sla-999).
+                properties:
+                  circuitBreaker:
+                    type: object
+                    properties:
+                      slidingWindowSize:
+                        type: integer
+                        description: Number of calls in the rolling window
+                      failureRateThreshold:
+                        type: integer
+                        description: Failure rate percentage to open circuit
+                        minimum: 1
+                        maximum: 100
+                      waitDurationInOpenState:
+                        type: string
+                        description: "Duration in open state before half-open (e.g. 30s)"
+                      permittedCallsInHalfOpenState:
+                        type: integer
+                        description: Number of test calls in half-open state
+                  retry:
+                    type: object
+                    properties:
+                      maxAttempts:
+                        type: integer
+                        minimum: 1
+                      waitDuration:
+                        type: string
+                        description: "Wait between retries (e.g. 500ms)"
+                      retryOnResultPredicate:
+                        type: string
+                        description: "Condition to retry (e.g. statusCode >= 500)"
+                  bulkhead:
+                    type: object
+                    properties:
+                      maxConcurrentCalls:
+                        type: integer
+                        description: Max concurrent calls per consumed namespace
+                      maxWaitDuration:
+                        type: string
+                        description: "Max wait for a bulkhead slot (e.g. 100ms)"
+                  rateLimit:
+                    type: object
+                    properties:
+                      limitForPeriod:
+                        type: integer
+                        description: Max calls per refresh period
+                      limitRefreshPeriod:
+                        type: string
+                        description: "Refresh period (e.g. 1s)"
+                      timeoutDuration:
+                        type: string
+                        description: "Timeout when limit exceeded (0ms = fail-fast)"
+
+            required:
+            - resources
+        required:
+        - spec
