@@ -1,6 +1,6 @@
 # @ikanos
 ---
-ikanos: "1.0.0-alpha4"
+ikanos: "1.0.0-beta1"
 info:
   display: "${{ values.name }}"
 {%- if not values.empty %}
@@ -49,11 +49,11 @@ capability:
         {%- endfor %}
         {%- endif %}
         # You can also define more specific paths if needed.
-        #- name: ships
+        #ships:
         #  path: "/ships"
         #  description: "Description of your ${{ values.name }} capability REST API expose" # Please complete the description
         #  operations:
-        #    - name: list-ships
+        #    list-ships:
         #      method: GET
         #      call: ${{ consumesEntry.namespace }}.list-ships
 

@@ -1,0 +1,74 @@
+name: Sync Provided OpenAPI spec
+
+# Regenerates backstage/provided-apis/openapi.yaml whenever the Ikanos capability
+# file changes on main, so the Backstage API entity (which reads $text: ./openapi.yaml)
+# stays in sync with the capability's exposed REST adapter.
+#
+# This file was scaffolded by the Naftiko Warden capability template. The Backstage
+# (Nunjucks) templating engine and GitHub Actions both use ${{ '${{' }} ... }} syntax,
+# so all GitHub-native expressions below are wrapped in {% raw %} ... {% endraw %}.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "${{ values.name }}.ikanos.yml"
+
+# Allow the workflow to push the regenerated spec back to the repository.
+permissions:
+  contents: write
+
+# Avoid overlapping runs racing to commit openapi.yaml; cancel the in-flight one.
+concurrency:
+  group: sync-openapi-${% raw %}{{ github.ref }}{% endraw %}
+  cancel-in-progress: true
+
+env:
+  IKANOS_VERSION: v1.0.0-beta1
+  CAPABILITY_FILE: "${{ values.name }}.ikanos.yml"
+  OPENAPI_OUTPUT: backstage/provided-apis/openapi.yaml
+
+jobs:
+  sync-openapi:
+    runs-on: ubuntu-latest
+    # Guard against an infinite loop: skip runs triggered by this workflow's own commit.
+    if: ${% raw %}{{ github.actor != 'github-actions[bot]' }}{% endraw %}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Ikanos CLI
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL \
+            "https://github.com/naftiko/ikanos/releases/download/${% raw %}{{ env.IKANOS_VERSION }}{% endraw %}/ikanos-cli-linux-amd64" \
+            -o "$HOME/.local/bin/ikanos"
+          chmod +x "$HOME/.local/bin/ikanos"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Ikanos CLI
+        run: ikanos --help >/dev/null
+
+      - name: Export OpenAPI spec from capability
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname "${% raw %}{{ env.OPENAPI_OUTPUT }}{% endraw %}")"
+          ikanos export openapi "${% raw %}{{ env.CAPABILITY_FILE }}{% endraw %}" \
+            --output "${% raw %}{{ env.OPENAPI_OUTPUT }}{% endraw %}"
+
+      - name: Commit regenerated spec if it changed
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- "${% raw %}{{ env.OPENAPI_OUTPUT }}{% endraw %}"; then
+            echo "OpenAPI spec is already up to date — nothing to commit."
+            exit 0
+          fi
+
+          git add "${% raw %}{{ env.OPENAPI_OUTPUT }}{% endraw %}"
+          git commit -m "chore: regenerate OpenAPI spec from ${% raw %}{{ env.CAPABILITY_FILE }}{% endraw %}"
+          git push
