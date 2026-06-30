@@ -17,12 +17,21 @@ jobs:
       packages: write
 
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_WARDEN_CONTENTS_READ_ID }}
+          private-key: ${{ secrets.APP_WARDEN_CONTENTS_READ_PRIVATE_KEY }}
+          owner: naftiko
+          repositories: warden
+
       - name: Checkout naftiko/warden repository
         uses: actions/checkout@v5
         with:
           repository: naftiko/warden
-          # naftiko/warden is private, use a secret PAT with contents permission and read access to naftiko/warden
-          token: ${{ secrets.WARDEN_CONTENTS_READ }}
+          # naftiko/warden is private, use a secret GitHub App token with contents permission and read access to naftiko/warden
+          token: ${{ steps.app-token.outputs.token }}
           path: warden
 
       - name: Setup Node.js
@@ -71,18 +80,36 @@ jobs:
     needs: publish-backstage-plugins
 
     steps:
+      - name: Generate GitHub App token for fleet
+        id: app-token-fleet
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_SYNC_IKANOS_VERSION_ID }}
+          private-key: ${{ secrets.APP_SYNC_IKANOS_VERSION_PRIVATE_KEY }}
+          owner: naftiko
+          repositories: fleet
+
+      - name: Generate GitHub App token for warden
+        id: app-token-warden
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_WARDEN_CONTENTS_READ_ID }}
+          private-key: ${{ secrets.APP_WARDEN_CONTENTS_READ_PRIVATE_KEY }}
+          owner: naftiko
+          repositories: warden
+
       - name: Checkout fleet repository
         uses: actions/checkout@v5
         with:
-          token: ${{ secrets.FLEET_CONTENTS_WRITE_PR_WRITE }}
+          token: ${{ steps.app-token-fleet.outputs.token }}
           path: fleet
 
       - name: Checkout naftiko/warden repository
         uses: actions/checkout@v5
         with:
           repository: naftiko/warden
-          # naftiko/warden is private, use a secret PAT with contents permission and read access to naftiko/warden
-          token: ${{ secrets.WARDEN_CONTENTS_READ }}
+          # naftiko/warden is private, use a secret GitHub App token with contents permission and read access to naftiko/warden
+          token: ${{ steps.app-token-warden.outputs.token }}
           path: warden
 
       - name: Copy templates (excluding *.md files)
@@ -95,7 +122,7 @@ jobs:
       - name: Create pull request
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.FLEET_CONTENTS_WRITE_PR_WRITE }}
+          token: ${{ steps.app-token-fleet.outputs.token }}
           path: fleet
           base: main
           branch: chore/update-warden-templates

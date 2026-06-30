@@ -19,12 +19,30 @@ jobs:
       contents: write
 
     steps:
+      - name: Generate GitHub App token for crafter
+        id: app-token-crafter
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_CRAFTER_CONTENTS_READ_ID }}
+          private-key: ${{ secrets.APP_CRAFTER_CONTENTS_READ_PRIVATE_KEY }}
+          owner: naftiko
+          repositories: crafter
+
+      - name: Generate GitHub App token for polychro (Actions read)
+        id: app-token-polychro
+        if: github.event.inputs.polychro_run_id != ''
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_POLYCHRO_ACTION_READ_ID }}
+          private-key: ${{ secrets.APP_POLYCHRO_ACTION_READ_PRIVATE_KEY }}
+          owner: naftiko
+          repositories: polychro
+
       - name: Checkout naftiko/crafter repository
         uses: actions/checkout@v5
         with:
           repository: naftiko/crafter
-          # naftiko/crafter is private, use a secret PAT with contents permission and read access to naftiko/crafter
-          token: ${{ secrets.CRAFTER_CONTENTS_READ }}
+          token: ${{ steps.app-token-crafter.outputs.token }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -44,12 +62,12 @@ jobs:
         #    only needed to raise the API rate limit.
         #  - Manual with polychro_run_id: pull the binaries straight from an Actions RUN's
         #    artifacts (before any release exists). Downloading run artifacts ALWAYS requires
-        #    a PAT with actions:read on naftiko/polychro, even though the repo is public — the
+        #    a token with actions:read on naftiko/polychro, even though the repo is public — the
         #    workflow's own GITHUB_TOKEN cannot read another repo's artifacts.
         run: npm run fetch-binaries
         working-directory: extensions/naftiko-crafter
         env:
-          GITHUB_TOKEN: ${{ github.event.inputs.polychro_run_id != '' && secrets.POLYCHRO_ACTIONS_READ || github.token }}
+          GITHUB_TOKEN: ${{ github.event.inputs.polychro_run_id != '' && steps.app-token-polychro.outputs.token || github.token }}
           POLYCHRO_RUN_ID: ${{ github.event.inputs.polychro_run_id }}
           # Used only when polychro_run_id is empty: always pull the latest Polychro release.
           POLYCHRO_VERSION: latest
@@ -112,3 +130,4 @@ jobs:
           VSIX=$(ls extensions/naftiko-crafter/*.vsix | head -1)
           TAG="${{ github.event.release.tag_name || github.event.inputs.version }}"
           gh release upload "$TAG" "$VSIX" --clobber --repo ${{ github.repository }}
+          
