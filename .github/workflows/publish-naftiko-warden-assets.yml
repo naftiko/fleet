@@ -112,12 +112,12 @@ jobs:
           token: ${{ steps.app-token-warden.outputs.token }}
           path: warden
 
-      - name: Copy templates (excluding *.md files)
+      - name: Copy templates (excluding root README.md file)
         run: |
           rm -rf fleet/warden/templates
           mkdir -p fleet/warden/templates
           cp -R warden/templates/. fleet/warden/templates/
-          find fleet/warden/templates -name '*.md' -delete
+          rm -f fleet/warden/templates/README.md
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v6

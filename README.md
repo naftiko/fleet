@@ -1,6 +1,6 @@
 # Naftiko Fleet
 
-Welcome to the **Naftiko Fleet**, the Enterprise platform for [Spec-Driven Integration](https://shipyard.naftiko.io/docs/1.0.0-alpha4/concepts/spec-driven-integration/) — reinventing API integration for the AI era with governed, versatile **capabilities** that streamline the API sprawl created by massive SaaS and microservices growth.
+Welcome to the **Naftiko Fleet**, the Enterprise platform for [Spec-Driven Integration](https://shipyard.naftiko.io/ikanos/1.0.0-beta1/concepts/spec-driven-integration/) — reinventing API integration for the AI era with governed, versatile **capabilities** that streamline the API sprawl created by massive SaaS and microservices growth.
 
 > A *fleet* is what you call a group of ships sailing together — here, a group of capabilities running and governed as one.
 
@@ -24,14 +24,14 @@ The Naftiko Fleet delivers Spec-Driven Integration **end to end**, from authorin
 
 The complete, always-up-to-date Fleet documentation lives on the **Naftiko Shipyard**. Start here and keep exploring:
 
-- :compass: [Concepts — Spec-Driven Integration](https://shipyard.naftiko.io/ikanos/1.0.0-alpha4/concepts/spec-driven-integration/)
-- :ship: [Fleet Overview](https://shipyard.naftiko.io/fleet/1.0.0-alpha4/index.html)
-- :hammer_and_wrench: [Crafter — the capability builder](https://shipyard.naftiko.io/fleet/1.0.0-alpha4/crafter/)
-- :shield: [Warden — governance & policy](https://shipyard.naftiko.io/fleet/1.0.0-alpha4/warden/)
-- :sailboat: [Skipper — fleet-wide orchestration](https://shipyard.naftiko.io/fleet/1.0.0-alpha4/skipper/)
-- :ocean: [FAQ](https://shipyard.naftiko.io/fleet/1.0.0-alpha4/faq/)
-- :mega: [Releases](https://shipyard.naftiko.io/fleet/1.0.0-alpha4/releases/)
-- :telescope: [Roadmap](https://shipyard.naftiko.io/fleet/1.0.0-alpha4/roadmap/)
+- :compass: [Concepts — Spec-Driven Integration](https://shipyard.naftiko.io/ikanos/1.0.0-beta1/concepts/spec-driven-integration/)
+- :ship: [Fleet Overview](https://shipyard.naftiko.io/fleet/1.0.0-beta1/index.html)
+- :hammer_and_wrench: [Crafter — the capability builder](https://shipyard.naftiko.io/fleet/1.0.0-beta1/crafter/)
+- :shield: [Warden — governance & policy](https://shipyard.naftiko.io/fleet/1.0.0-beta1/warden/)
+- :sailboat: [Skipper — fleet-wide orchestration](https://shipyard.naftiko.io/fleet/1.0.0-beta1/skipper/)
+- :ocean: [FAQ](https://shipyard.naftiko.io/fleet/1.0.0-beta1/faq/)
+- :mega: [Releases](https://shipyard.naftiko.io/fleet/1.0.0-beta1/releases/)
+- :telescope: [Roadmap](https://shipyard.naftiko.io/fleet/1.0.0-beta1/roadmap/)
 
 ## :video_game: Try it in the Playground
 
@@ -42,7 +42,5 @@ Want to see the Fleet in action without installing anything? The **[Playground](
 - **[Track 3 — API Orchestration](https://shipyard.naftiko.io/playground/tutorial/11)** (the Fleet Manifest capstone)
 
 ***
-
-Please join the community of users and contributors in [this GitHub Discussion forum!](https://github.com/orgs/naftiko/discussions)
 
 <img src="https://naftiko.github.io/docs/images/navi/navi_hello.svg" width="50">
