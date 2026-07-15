@@ -1,15 +1,15 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: naftiko-warden-capability-template
-  title: Naftiko Warden
+  name: ikanos-capability-template
+  title: Ikanos Capability
   description: >
     Create a new capability component by choosing what you want to expose from
     MCP, REST, or Agent Skills. The corresponding configuration file
     is then customized and pushed to GitHub.
   tags:
     - naftiko
-    - warden
+    - ikanos
     - capability
 spec:
   owner: user:guest
