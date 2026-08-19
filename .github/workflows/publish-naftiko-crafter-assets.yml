@@ -55,30 +55,14 @@ jobs:
         run: npm ci
         working-directory: extensions/naftiko-crafter
 
-      - name: Fetch Polychro native binaries
-        # Source selection:
-        #  - Default (release events / manual without run id): pull the binaries from a
-        #    Polychro RELEASE. naftiko/polychro is public, so the automatic GITHUB_TOKEN is
-        #    only needed to raise the API rate limit.
-        #  - Manual with polychro_run_id: pull the binaries straight from an Actions RUN's
-        #    artifacts (before any release exists). Downloading run artifacts ALWAYS requires
-        #    a token with actions:read on naftiko/polychro, even though the repo is public — the
-        #    workflow's own GITHUB_TOKEN cannot read another repo's artifacts.
-        run: npm run fetch-binaries
-        working-directory: extensions/naftiko-crafter
-        env:
-          GITHUB_TOKEN: ${{ github.event.inputs.polychro_run_id != '' && steps.app-token-polychro.outputs.token || github.token }}
-          POLYCHRO_RUN_ID: ${{ github.event.inputs.polychro_run_id }}
-          # Used only when polychro_run_id is empty: always pull the latest Polychro release.
-          POLYCHRO_VERSION: latest
-
-      - name: Write Polychro version and date
-        # Update infos.yaml in place (preserving any other fields) with:
-        #  - date: the current date
-        #  - polychro.version: the version matching the binaries fetched above.
-        #      * If polychro_run_id is set: use the run id itself as the version.
-        #      * Otherwise: use the tag of the latest Polychro release.
-        working-directory: extensions/naftiko-crafter
+      - name: Resolve Polychro version and date
+        # Resolve up front (before fetching binaries) so the version-compatibility gate
+        # below can run before any binary is downloaded, and this step's output is reused
+        # by "Write Polychro version and date" further down instead of being recomputed.
+        #  - If polychro_run_id is set: use the run id itself as the version (no gate
+        #    possible — a run id is not a released, comparable semver).
+        #  - Otherwise: use the tag of the latest Polychro release.
+        id: resolve-polychro-version
         env:
           GH_TOKEN: ${{ github.token }}
           POLYCHRO_RUN_ID: ${{ github.event.inputs.polychro_run_id }}
@@ -98,11 +82,80 @@ jobs:
             exit 1
           fi
 
-          CURRENT_DATE=$(date -u +%Y-%m-%d)
-          INFOS_FILE=src/resources/infos.yaml
-
           echo "Polychro version: ${POLYCHRO_VERSION}"
-          echo "Date: ${CURRENT_DATE}"
+          echo "version=${POLYCHRO_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "date=$(date -u +%Y-%m-%d)" >> "${GITHUB_OUTPUT}"
+
+      - name: Gate on minimum Polychro version (--schema support)
+        # `PolychroValidator` (extensions/naftiko-crafter/src/validators/polychroValidator.ts)
+        # relies on `--schema` for structural JSON Schema validation. That option exists in the
+        # CLI's parser since v1.0.0-alpha3, but was a silent no-op until v1.0.0-alpha4
+        # (naftiko/polychro#20: the packaged CLI shipped without any ValidatorFactory SPI
+        # implementation on its runtime classpath, so `polychro lint` always printed "No
+        # issues found." regardless of the document). Bundling anything older than
+        # v1.0.0-alpha4 would silently ship a VSIX whose structural validation never runs.
+        # Skipped for polychro_run_id builds — a run id is not a comparable release version,
+        # and manual run-id builds are an explicit, deliberate escape hatch.
+        #
+        # Comparison done in Python rather than `sort -V`: sort -V has no semver semantics
+        # for the "-TIERn" suffix — it would rank a future stable "v1.0.0" release as OLDER
+        # than "v1.0.0-alpha4" (shorter string sorts first), which is backwards. A stable
+        # release must always outrank any prerelease of the same MAJOR.MINOR.PATCH.
+        if: github.event.inputs.polychro_run_id == ''
+        env:
+          POLYCHRO_VERSION: ${{ steps.resolve-polychro-version.outputs.version }}
+        run: |
+          set -euo pipefail
+          MIN_VERSION="v1.0.0-alpha4"
+
+          python3 -c "
+          import re, sys
+
+          PATTERN = re.compile(r'^v?(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z]+)(\d+))?$')
+          TIERS = {'alpha': 0, 'beta': 1, 'rc': 2}
+
+          def parse(v):
+              m = PATTERN.match(v)
+              if not m:
+                  sys.exit(f'::error::Unrecognized Polychro version format: {v!r}')
+              major, minor, patch, tier, num = m.groups()
+              # No prerelease sorts as the highest tier (a stable release outranks every prerelease).
+              tier_rank = TIERS.get((tier or '').lower(), len(TIERS)) if tier else len(TIERS)
+              return (int(major), int(minor), int(patch), tier_rank, int(num) if num else 0)
+
+          actual = parse('${POLYCHRO_VERSION}')
+          minimum = parse('${MIN_VERSION}')
+          if actual < minimum:
+              sys.exit('::error::Resolved Polychro version (${POLYCHRO_VERSION}) is older than the minimum required for --schema support (${MIN_VERSION}, see naftiko/polychro#20). Refusing to package the VSIX.')
+          print('Polychro version ${POLYCHRO_VERSION} satisfies the minimum ${MIN_VERSION}.')
+          "
+      - name: Fetch Polychro native binaries
+        # Source selection:
+        #  - Default (release events / manual without run id): pull the binaries from a
+        #    Polychro RELEASE. naftiko/polychro is public, so the automatic GITHUB_TOKEN is
+        #    only needed to raise the API rate limit.
+        #  - Manual with polychro_run_id: pull the binaries straight from an Actions RUN's
+        #    artifacts (before any release exists). Downloading run artifacts ALWAYS requires
+        #    a token with actions:read on naftiko/polychro, even though the repo is public — the
+        #    workflow's own GITHUB_TOKEN cannot read another repo's artifacts.
+        run: npm run fetch-binaries
+        working-directory: extensions/naftiko-crafter
+        env:
+          GITHUB_TOKEN: ${{ github.event.inputs.polychro_run_id != '' && steps.app-token-polychro.outputs.token || github.token }}
+          POLYCHRO_RUN_ID: ${{ github.event.inputs.polychro_run_id }}
+          # Used only when polychro_run_id is empty: always pull the latest Polychro release.
+          POLYCHRO_VERSION: latest
+
+      - name: Write Polychro version and date
+        # Update infos.yaml in place (preserving any other fields) with the version/date
+        # resolved by "Resolve Polychro version and date" above.
+        working-directory: extensions/naftiko-crafter
+        env:
+          POLYCHRO_VERSION: ${{ steps.resolve-polychro-version.outputs.version }}
+          CURRENT_DATE: ${{ steps.resolve-polychro-version.outputs.date }}
+        run: |
+          set -euo pipefail
+          INFOS_FILE=src/resources/infos.yaml
 
           mkdir -p "$(dirname "${INFOS_FILE}")"
           touch "${INFOS_FILE}"
@@ -130,4 +183,3 @@ jobs:
           VSIX=$(ls extensions/naftiko-crafter/*.vsix | head -1)
           TAG="${{ github.event.release.tag_name || github.event.inputs.version }}"
           gh release upload "$TAG" "$VSIX" --clobber --repo ${{ github.repository }}
-          
