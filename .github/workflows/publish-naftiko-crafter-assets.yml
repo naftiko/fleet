@@ -193,3 +193,29 @@ jobs:
           VSIX=$(ls extensions/naftiko-crafter/*.vsix | head -1)
           TAG="${{ github.event.release.tag_name || github.event.inputs.version }}"
           gh release upload "$TAG" "$VSIX" --clobber --repo ${{ github.repository }}
+
+  push-to-marketplace:
+    needs: publish-vsix
+    if: needs.publish-vsix.result == 'success' && (github.event_name == 'release' || github.event.inputs.version != '')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Download VSIX artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: naftiko-crafter-vsix
+          path: dist
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Publish to VS Code Marketplace
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          set -euo pipefail
+          VSIX=$(ls dist/*.vsix | head -1)
+          echo "Publishing $VSIX to the VS Code Marketplace"
+          vsce publish --packagePath "$VSIX"
