@@ -104,12 +104,12 @@ jobs:
         if: github.event.inputs.polychro_run_id == ''
         env:
           POLYCHRO_VERSION: ${{ steps.resolve-polychro-version.outputs.version }}
+          MIN_VERSION: "v1.0.0-alpha4"
         run: |
           set -euo pipefail
-          MIN_VERSION="v1.0.0-alpha4"
 
           python3 -c "
-          import re, sys
+          import os, re, sys
 
           PATTERN = re.compile(r'^v?(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z]+)(\d+))?$')
           TIERS = {'alpha': 0, 'beta': 1, 'rc': 2}
@@ -119,15 +119,23 @@ jobs:
               if not m:
                   sys.exit(f'::error::Unrecognized Polychro version format: {v!r}')
               major, minor, patch, tier, num = m.groups()
-              # No prerelease sorts as the highest tier (a stable release outranks every prerelease).
-              tier_rank = TIERS.get((tier or '').lower(), len(TIERS)) if tier else len(TIERS)
+              if tier is None:
+                  # No prerelease sorts as the highest tier (a stable release outranks every prerelease).
+                  tier_rank = len(TIERS)
+              else:
+                  tier_lower = tier.lower()
+                  if tier_lower not in TIERS:
+                      sys.exit(f'::error::Unrecognized Polychro prerelease tier {tier!r} in version {v!r}')
+                  tier_rank = TIERS[tier_lower]
               return (int(major), int(minor), int(patch), tier_rank, int(num) if num else 0)
 
-          actual = parse('${POLYCHRO_VERSION}')
-          minimum = parse('${MIN_VERSION}')
+          polychro_version = os.environ['POLYCHRO_VERSION']
+          min_version = os.environ['MIN_VERSION']
+          actual = parse(polychro_version)
+          minimum = parse(min_version)
           if actual < minimum:
-              sys.exit('::error::Resolved Polychro version (${POLYCHRO_VERSION}) is older than the minimum required for --schema support (${MIN_VERSION}, see naftiko/polychro#20). Refusing to package the VSIX.')
-          print('Polychro version ${POLYCHRO_VERSION} satisfies the minimum ${MIN_VERSION}.')
+              sys.exit(f'::error::Resolved Polychro version ({polychro_version}) is older than the minimum required for --schema support ({min_version}, see naftiko/polychro#20). Refusing to package the VSIX.')
+          print(f'Polychro version {polychro_version} satisfies the minimum {min_version}.')
           "
       - name: Fetch Polychro native binaries
         # Source selection:
@@ -143,8 +151,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.event.inputs.polychro_run_id != '' && steps.app-token-polychro.outputs.token || github.token }}
           POLYCHRO_RUN_ID: ${{ github.event.inputs.polychro_run_id }}
-          # Used only when polychro_run_id is empty: always pull the latest Polychro release.
-          POLYCHRO_VERSION: latest
+          # Reuse the exact version the gate above validated (rather than re-resolving `latest`
+          # independently), so a new Polychro release published between the two API calls can't
+          # slip an unvalidated version past the gate. Only used when polychro_run_id is empty.
+          POLYCHRO_VERSION: ${{ steps.resolve-polychro-version.outputs.version }}
 
       - name: Write Polychro version and date
         # Update infos.yaml in place (preserving any other fields) with the version/date
