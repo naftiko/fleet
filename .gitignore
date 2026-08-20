@@ -1,2 +1,5 @@
 # macOS
 .DS_Store
+
+# Synced agent skill copies (served by the agents-shared capability — never commit)
+.agents/
