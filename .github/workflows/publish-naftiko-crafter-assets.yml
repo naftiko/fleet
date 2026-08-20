@@ -55,6 +55,14 @@ jobs:
         run: npm ci
         working-directory: extensions/naftiko-crafter
 
+      - name: Audit production dependencies
+        # Scoped to --omit=dev: devDependencies (test/build tooling) are never bundled into
+        # the VSIX by `vsce package`, so auditing them here would gate releases on CVEs in
+        # code that isn't actually shipped. Fails the job (npm audit's own exit code) on
+        # any HIGH/CRITICAL finding in what's actually published.
+        run: npm audit --omit=dev --audit-level=high
+        working-directory: extensions/naftiko-crafter
+
       - name: Fetch Polychro native binaries
         # Source selection:
         #  - Default (release events / manual without run id): pull the binaries from a
