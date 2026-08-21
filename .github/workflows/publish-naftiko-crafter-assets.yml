@@ -11,6 +11,11 @@ on:
       polychro_run_id:
         description: 'Polychro Actions run ID to grab the native binaries from (e.g. 27817125654). Leave empty to use a Polychro release instead.'
         required: false
+      publish_to_marketplace:
+        description: 'Publish the packaged VSIX to the public VS Code Marketplace. This is irreversible, so it defaults to false — set to true only when a Marketplace publish is deliberately intended. Ignored on automatic "release" events, which never publish to the Marketplace on their own.'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   publish-vsix:
@@ -173,7 +178,7 @@ jobs:
             yq -i '.date = strenv(CURRENT_DATE) | .polychro.version = strenv(POLYCHRO_VERSION)' "${INFOS_FILE}"
 
       - name: Install vsce
-        run: npm install -g @vscode/vsce
+        run: npm install -g @vscode/vsce@3.9.2
 
       - name: Package extension
         run: vsce package
@@ -196,8 +201,12 @@ jobs:
 
   push-to-marketplace:
     needs: publish-vsix
-    if: needs.publish-vsix.result == 'success' && (github.event_name == 'release' || github.event.inputs.version != '')
+    if: |
+      needs.publish-vsix.result == 'success' &&
+      (github.event_name == 'release' || github.event.inputs.version != '') &&
+      github.event.inputs.publish_to_marketplace == 'true'
     runs-on: ubuntu-latest
+    environment: visual-studio-marketplace
     permissions:
       contents: read
 
@@ -208,8 +217,13 @@ jobs:
           name: naftiko-crafter-vsix
           path: dist
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
       - name: Install vsce
-        run: npm install -g @vscode/vsce
+        run: npm install -g @vscode/vsce@3.9.2
 
       - name: Publish to VS Code Marketplace
         env:
