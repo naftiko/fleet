@@ -1,0 +1,89 @@
+name: Set Release Tags
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-version:
+        description: "Release version to tag across warden, skipper, crafter, and fleet, including the leading v (e.g. v1.0.0-beta6)."
+        required: true
+        type: string
+
+# No secrets.GITHUB_TOKEN is used in this workflow (a GitHub App token, scoped per
+# repository below, is minted instead to create each tag), so this is not an active
+# privilege-escalation risk. Declared explicitly anyway for consistency with this
+# repo's other workflows (publish-naftiko-*-assets.yml), which all set least-privilege
+# permissions rather than relying on the repository/org default.
+permissions:
+  contents: read
+
+jobs:
+  validate-release-version:
+    name: Validate release-version format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check release-version matches vMAJOR.MINOR.PATCH[-PRERELEASE]
+        env:
+          RELEASE_VERSION: ${{ inputs.release-version }}
+        run: |
+          set -euo pipefail
+
+          # Leading "v" mandatory (this is a release tag, not an engine version),
+          # followed by a semver MAJOR.MINOR.PATCH, with an optional -PRERELEASE
+          # suffix (e.g. v1.0.0-beta6, v1.0.0-rc1, v2.3.4).
+          PATTERN='^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
+
+          if [[ ! "${RELEASE_VERSION}" =~ ${PATTERN} ]]; then
+            echo "::error::release-version '${RELEASE_VERSION}' does not match the expected format v<MAJOR>.<MINOR>.<PATCH>[-<PRERELEASE>] (e.g. v1.0.0-beta6)." >&2
+            exit 1
+          fi
+
+          echo "release-version '${RELEASE_VERSION}' is valid."
+
+  tag-repos:
+    name: Tag ${{ matrix.repo }}
+    needs: validate-release-version
+    runs-on: ubuntu-latest
+    strategy:
+      # Deliberately independent per repo: a failure tagging one repository (e.g. a
+      # tag that already exists) must not block the others from being tagged.
+      fail-fast: false
+      matrix:
+        # naftiko/polychro and naftiko/ikanos are deliberately excluded — their
+        # tagging stays independent of the fleet release cadence.
+        repo: [warden, skipper, crafter, fleet]
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        with:
+          client-id: ${{ secrets.APP_SYNC_FLEET_VERSION_ID }}
+          private-key: ${{ secrets.APP_SYNC_FLEET_VERSION_PRIVATE_KEY }}
+          owner: naftiko
+          repositories: ${{ matrix.repo }}
+
+      - name: Resolve default branch HEAD SHA
+        id: resolve-sha
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          DEFAULT_BRANCH=$(gh api "repos/naftiko/${{ matrix.repo }}" --jq '.default_branch')
+          SHA=$(gh api "repos/naftiko/${{ matrix.repo }}/commits/${DEFAULT_BRANCH}" --jq '.sha')
+
+          echo "Tagging naftiko/${{ matrix.repo }}@${DEFAULT_BRANCH} (${SHA})"
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ inputs.release-version }}
+          SHA: ${{ steps.resolve-sha.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          gh api "repos/naftiko/${{ matrix.repo }}/git/refs" \
+            -f ref="refs/tags/${TAG}" \
+            -f sha="${SHA}"
+
+          echo "Created \`${TAG}\` on \`naftiko/${{ matrix.repo }}\` @ \`${SHA}\`" >> "$GITHUB_STEP_SUMMARY"
