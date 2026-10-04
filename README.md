@@ -1,6 +1,6 @@
 # Naftiko Fleet
 
-Welcome to the **Naftiko Fleet**, the Enterprise platform for [Spec-Driven Integration](https://shipyard.naftiko.io/ikanos/1.0.0-beta1/concepts/spec-driven-integration/) — reinventing API integration for the AI era with governed, versatile **capabilities** that streamline the API sprawl created by massive SaaS and microservices growth.
+Welcome to the **Naftiko Fleet**, the Enterprise platform for [Spec-Driven Integration](https://shipyard.naftiko.io/ikanos/latest/concepts/spec-driven-integration/) — reinventing API integration for the AI era with governed, versatile **capabilities** that streamline the API sprawl created by massive SaaS and microservices growth.
 
 > A *fleet* is what you call a group of ships sailing together — here, a group of capabilities running and governed as one.
 
