@@ -24,14 +24,14 @@ The Naftiko Fleet delivers Spec-Driven Integration **end to end**, from authorin
 
 The complete, always-up-to-date Fleet documentation lives on the **Naftiko Shipyard**. Start here and keep exploring:
 
-- :compass: [Concepts — Spec-Driven Integration](https://shipyard.naftiko.io/ikanos/1.0.0-beta2/concepts/spec-driven-integration/)
-- :ship: [Fleet Overview](https://shipyard.naftiko.io/fleet/1.0.0-beta2/index.html)
-- :hammer_and_wrench: [Crafter — the capability builder](https://shipyard.naftiko.io/fleet/1.0.0-beta2/crafter/)
-- :shield: [Warden — governance & policy](https://shipyard.naftiko.io/fleet/1.0.0-beta2/warden/)
-- :sailboat: [Skipper — fleet-wide orchestration](https://shipyard.naftiko.io/fleet/1.0.0-beta2/skipper/)
-- :ocean: [FAQ](https://shipyard.naftiko.io/fleet/1.0.0-beta2/faq/)
-- :mega: [Releases](https://shipyard.naftiko.io/fleet/1.0.0-beta2/releases/)
-- :telescope: [Roadmap](https://shipyard.naftiko.io/fleet/1.0.0-beta2/roadmap/)
+- :compass: [Concepts — Spec-Driven Integration](https://shipyard.naftiko.io/ikanos/latest/concepts/spec-driven-integration/)
+- :ship: [Fleet Overview](https://shipyard.naftiko.io/fleet/latest/index.html)
+- :hammer_and_wrench: [Crafter — the capability builder](https://shipyard.naftiko.io/fleet/latest/crafter/)
+- :shield: [Warden — governance & policy](https://shipyard.naftiko.io/fleet/latest/warden/)
+- :sailboat: [Skipper — fleet-wide orchestration](https://shipyard.naftiko.io/fleet/latest/skipper/)
+- :ocean: [FAQ](https://shipyard.naftiko.io/fleet/latest/faq/)
+- :mega: [Releases](https://shipyard.naftiko.io/fleet/latest/releases/)
+- :telescope: [Roadmap](https://shipyard.naftiko.io/fleet/latest/roadmap/)
 
 ## :video_game: Try it in the Playground
 
