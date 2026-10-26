@@ -1,6 +1,6 @@
 # @ikanos
 ---
-ikanos: "1.0.0-beta7"
+ikanos: "1.0.0-beta8"
 info:
   display: "${{ values.name }}"
 {%- if not values.empty %}
