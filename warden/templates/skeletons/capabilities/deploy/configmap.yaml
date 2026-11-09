@@ -7,7 +7,7 @@ data:
   capability.yaml: |
     # @ikanos
     ---
-    ikanos: "1.0.0-alpha4"
+    ikanos: "1.0.0-beta9"
     info:
       display: "${{ values.name }}"
     {%- if not values.empty %}
@@ -37,14 +37,6 @@ data:
                 targetNamespace: ${{ consumesEntry.namespace }}
             {%- endfor %}
             {%- endif %}
-      {%- endif %}
-      {%- if 'Agent Skills' in values.exposes %}
-        - type: skill
-          address: "0.0.0.0"
-          port: 4000
-          namespace: ${{ values.namespaceBase }}-skills
-          description: "Description of your ${{ values.name }} capability skill expose"
-          skills:
       {%- endif %}
 
       {%- if values.consumes and values.consumes | length > 0 %}

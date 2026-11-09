@@ -1,6 +1,6 @@
 # @ikanos
 ---
-ikanos: "1.0.0-beta8"
+ikanos: "1.0.0-beta9"
 info:
   display: "${{ values.name }}"
 {%- if not values.empty %}
@@ -15,15 +15,16 @@ capability:
       namespace: ${{ values.namespaceBase }}-mcp
       description: "Description of your ${{ values.name }} capability MCP expose" # Please complete the description
       tools:
-      #  - name: get-current-weather
+      #  get-current-weather:
       #    description: "Retrieve current weather conditions for a location"
       #    inputParameters:
-      #      - name: location
+      #      location:
       #        type: string
+      #        required: true
       #        description: "City name or coordinates (lat,lon)"
       #    call: open-meteo.get-current
       #    with:
-      #      location: "$this.weather-mcp.location"
+      #      location: ${{ values.namespaceBase }}-mcp.location
       #    outputParameters:
       #      - type: object
       #        mapping: $.current
@@ -57,29 +58,6 @@ capability:
         #      method: GET
         #      call: ${{ consumesEntry.namespace }}.list-ships
 
-  {%- endif %}
-  {%- if 'Agent Skills' in values.exposes %}
-    - type: skill
-      address: "0.0.0.0" # Needed in Docker context. Permits to access the skill with localhost from outside the container.
-      port: 4000
-      namespace: ${{ values.namespaceBase }}-skills
-      description: "Description of your ${{ values.name }} capability skill expose" # Please complete the description
-      skills:
-      #  - name: weather-forecast
-      #    description: "Real-time weather data and forecasting"
-      #    license: Apache-2.0
-      #    compatibility: "claude-3-5-sonnet,gpt-4o"
-      #    argument-hint: "Use when the user asks about weather, forecast, temperature, or climate"
-      #    location: "file:///opt/skills/weather-forecast"
-      #    tools:
-      #      - name: current-conditions
-      #        description: "Get current weather conditions for a specific location"
-      #        from:
-      #          sourceNamespace: weather-api
-      #          action: get-current
-      #      - name: climate-guide
-      #        description: "Reference guide for interpreting climate data and weather patterns"
-      #        instruction: "climate-interpretation-guide.md"
   {%- endif %}
 
   {%- if values.consumes and values.consumes | length > 0 %}
