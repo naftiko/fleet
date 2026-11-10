@@ -7,7 +7,7 @@ on:
         description: 'Release tag to upload the VSIX to (e.g. v1.2.3). Leave empty to skip publishing.'
         required: false
       polychro_run_id:
-        description: 'Polychro Actions run ID to grab the native binaries from (e.g. 27817125654). Leave empty to use a Polychro release instead.'
+        description: 'Polychro Actions run ID to grab the jar + JRE packages from (e.g. 27817125654). Leave empty to use a Polychro release instead.'
         required: false
       publish_to_marketplace:
         description: 'Publish the packaged VSIX to the public VS Code Marketplace. This is irreversible, so it defaults to false — set to true only when a Marketplace publish is deliberately intended.'
@@ -59,8 +59,8 @@ jobs:
         working-directory: extensions/naftiko-crafter
 
       - name: Resolve Polychro version and date
-        # Resolve up front (before fetching binaries) so the version-compatibility gate
-        # below can run before any binary is downloaded, and this step's output is reused
+        # Resolve up front (before fetching the packages) so the version-compatibility gate
+        # below can run before anything is downloaded, and this step's output is reused
         # by "Write Polychro version and date" further down instead of being recomputed.
         #  - If polychro_run_id is set: use the run id itself as the version (no gate
         #    possible — a run id is not a released, comparable semver).
@@ -89,7 +89,7 @@ jobs:
           echo "version=${POLYCHRO_VERSION}" >> "${GITHUB_OUTPUT}"
           echo "date=$(date -u +%Y-%m-%d)" >> "${GITHUB_OUTPUT}"
 
-      - name: Gate on minimum Polychro version (--schema support)
+      - name: Gate on minimum Polychro version (jar + JRE packages, --schema support)
         # `PolychroValidator` (extensions/naftiko-crafter/src/validators/polychroValidator.ts)
         # relies on `--schema` for structural JSON Schema validation. That option exists in the
         # CLI's parser since v1.0.0-alpha3, but was a silent no-op until v1.0.0-alpha4
@@ -97,6 +97,11 @@ jobs:
         # implementation on its runtime classpath, so `polychro lint` always printed "No
         # issues found." regardless of the document). Bundling anything older than
         # v1.0.0-alpha4 would silently ship a VSIX whose structural validation never runs.
+        #
+        # The minimum is also the first release that publishes the jar + JRE packages
+        # (`polychro-cli-<platform>.tar.gz` / `.zip`) that `npm run fetch-binaries` downloads:
+        # v1.0.0-beta9. Earlier releases only carry the GraalVM native binaries, which the
+        # extension can no longer run (see extensions/naftiko-crafter/src/validators/runtime.ts).
         # Skipped for polychro_run_id builds — a run id is not a comparable release version,
         # and manual run-id builds are an explicit, deliberate escape hatch.
         #
@@ -107,7 +112,7 @@ jobs:
         if: github.event.inputs.polychro_run_id == ''
         env:
           POLYCHRO_VERSION: ${{ steps.resolve-polychro-version.outputs.version }}
-          MIN_VERSION: "v1.0.0-alpha4"
+          MIN_VERSION: "v1.0.0-beta9"
         run: |
           set -euo pipefail
 
@@ -137,15 +142,19 @@ jobs:
           actual = parse(polychro_version)
           minimum = parse(min_version)
           if actual < minimum:
-              sys.exit(f'::error::Resolved Polychro version ({polychro_version}) is older than the minimum required for --schema support ({min_version}, see naftiko/polychro#20). Refusing to package the VSIX.')
+              sys.exit(f'::error::Resolved Polychro version ({polychro_version}) is older than the minimum required ({min_version}: first release publishing the jar + JRE packages, and --schema support, see naftiko/polychro#20). Refusing to package the VSIX.')
           print(f'Polychro version {polychro_version} satisfies the minimum {min_version}.')
           "
-      - name: Fetch Polychro native binaries
+      - name: Fetch Polychro jar + JRE packages
+        # Downloads one package per platform (polychro.jar + lib/ + a custom jlink JRE, so the
+        # VSIX is self-contained and the user needs no Java), verifies its SHA-256 and extracts
+        # it under extensions/naftiko-crafter/bin/<platform>-<arch>/.
+        #
         # Source selection:
-        #  - Default (release events / manual without run id): pull the binaries from a
+        #  - Default (release events / manual without run id): pull the packages from a
         #    Polychro RELEASE. naftiko/polychro is public, so the automatic GITHUB_TOKEN is
         #    only needed to raise the API rate limit.
-        #  - Manual with polychro_run_id: pull the binaries straight from an Actions RUN's
+        #  - Manual with polychro_run_id: pull the packages straight from an Actions RUN's
         #    artifacts (before any release exists). Downloading run artifacts ALWAYS requires
         #    a token with actions:read on naftiko/polychro, even though the repo is public — the
         #    workflow's own GITHUB_TOKEN cannot read another repo's artifacts.
@@ -158,6 +167,13 @@ jobs:
           # independently), so a new Polychro release published between the two API calls can't
           # slip an unvalidated version past the gate. Only used when polychro_run_id is empty.
           POLYCHRO_VERSION: ${{ steps.resolve-polychro-version.outputs.version }}
+
+      - name: Smoke test the bundled Polychro (linux-amd64)
+        # The runner is linux-amd64: run the package that will ship for that platform, through
+        # the same `java -jar polychro.jar` command line as the extension, so a package whose
+        # embedded JRE or jar does not start fails here rather than in users' editors.
+        working-directory: extensions/naftiko-crafter
+        run: bin/linux-amd64/jre/bin/java -jar bin/linux-amd64/polychro.jar --version
 
       - name: Write Polychro version and date
         # Update infos.yaml in place (preserving any other fields) with the version/date
