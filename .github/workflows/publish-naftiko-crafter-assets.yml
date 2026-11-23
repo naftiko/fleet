@@ -146,7 +146,7 @@ jobs:
           print(f'Polychro version {polychro_version} satisfies the minimum {min_version}.')
           "
       - name: Fetch Polychro jar + JRE packages
-        # Downloads one package per platform (polychro.jar + lib/ + a custom jlink JRE, so the
+        # Downloads one package per platform (polychro.jar + its jars + a custom jlink JRE, so the
         # VSIX is self-contained and the user needs no Java), verifies its SHA-256 and extracts
         # it under extensions/naftiko-crafter/bin/<platform>-<arch>/.
         #
@@ -172,8 +172,21 @@ jobs:
         # The runner is linux-amd64: run the package that will ship for that platform, through
         # the same `java -jar polychro.jar` command line as the extension, so a package whose
         # embedded JRE or jar does not start fails here rather than in users' editors.
-        working-directory: extensions/naftiko-crafter
-        run: bin/linux-amd64/jre/bin/java -jar bin/linux-amd64/polychro.jar --version
+        # Same layouts, in the same order, as the extension's src/validators/runtime.ts:
+        # bin/java + jars/polychro.jar from Polychro v1.0.0-beta10 (JReleaser packages),
+        # jre/bin/java + polychro.jar before.
+        working-directory: extensions/naftiko-crafter/bin/linux-amd64
+        run: |
+          set -euo pipefail
+          if [ -x bin/java ] && [ -f jars/polychro.jar ]; then
+            bin/java -jar jars/polychro.jar --version
+          elif [ -x jre/bin/java ] && [ -f polychro.jar ]; then
+            jre/bin/java -jar polychro.jar --version
+          else
+            echo "::error::No Polychro JVM + jar found under bin/linux-amd64 (looked for bin/java + jars/polychro.jar, then jre/bin/java + polychro.jar)."
+            ls -la
+            exit 1
+          fi
 
       - name: Write Polychro version and date
         # Update infos.yaml in place (preserving any other fields) with the version/date
