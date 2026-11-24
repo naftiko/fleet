@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       release-version:
-        description: "Release version to tag across warden, skipper, crafter, and fleet, including the leading v (e.g. v1.0.0-beta6)."
+        description: "Release version to tag across warden, crafter, and fleet, including the leading v (e.g. v1.0.0-beta6)."
         required: true
         type: string
 
@@ -48,9 +48,9 @@ jobs:
       # tag that already exists) must not block the others from being tagged.
       fail-fast: false
       matrix:
-        # naftiko/polychro and naftiko/ikanos are deliberately excluded — their
-        # tagging stays independent of the fleet release cadence.
-        repo: [warden, skipper, crafter, fleet]
+        # naftiko/polychro, naftiko/ikanos and naftiko/skipper are deliberately
+        # excluded — their tagging stays independent of the fleet release cadence.
+        repo: [warden, crafter, fleet]
     steps:
       - name: Generate GitHub App token
         id: app-token
